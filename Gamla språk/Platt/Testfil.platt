@@ -1,0 +1,110 @@
+/*
+heltal funktion bla() {
+  heltal c = 3
+  returnera 5
+}
+avsluta funktion
+
+sträng funktion glaa() {
+  sträng g = "ööö"
+  returnera "heeej"
+}
+avsluta funktion
+
+skriv ut bla()
+skriv ut glaa()
+
+ifall (4<5) 
+{
+  heltal a = 99
+  ifall (3<4) 
+  {
+    heltal b = 76
+    skriv ut a+b
+  }
+  avsluta ifall
+}
+avsluta ifall
+
+bool a_b = 5<4
+skriv ut a_b
+
+
+lista b = ["hej","då", 5]
+skriv ut b
+
+
+lista funktion aa(n,m) {
+  returnera [n,m]
+} avsluta funktion
+
+
+lista c = [1,2,3]
+lista d = [1,2,3]
+ifall (c==d) {
+  skriv ut "HEEJ"
+} avsluta ifall
+
+lägg till "yo" i c
+lista e = [0]
+för (heltal i = 1: i<11:i++) {
+  lägg till i i e
+} avsluta för
+
+
+ta bort index 3 i e
+ta bort värde 6 i e
+skriv ut e
+skriv ut e[5]
+*/
+
+heltal funktion fak(n) {
+  ifall (n == 0) {
+    returnera 1
+  }
+  annars {
+    returnera n * fak((n-1))
+  } avsluta ifall
+} avsluta funktion
+
+för (heltal i = 0: i <= 9: i++) {
+  skriv ut fak(i)
+} avsluta för
+
+
+sträng funktion beställning(mat) {
+   ifall (mat == "Pizza") {
+      returnera "Pizza på gång!"
+   }
+   annars ifall (mat == "Hamburgare") {
+      returnera "Hamburgare på gång!"
+   }
+   annars {
+      returnera "Restaurangen har tyvärr inte den maten..."
+   } avsluta ifall
+} avsluta funktion
+
+skriv ut beställning("Pizza")
+skriv ut beställning("Sallad")
+sträng a = beställning("Hamburgare")
+skriv ut a
+
+ifall (2<4 och 3<5) {
+  skriv ut "HEJ"
+} avsluta ifall
+
+
+
+heltal funktion aaa(n) {
+  returnera n+1
+  skriv ut 10
+} avsluta funktion
+
+skriv ut aaa(1)
+
+heltal n = 0
+heltal funktion b(n,m) {
+  returnera n+m
+} avsluta funktion
+
+skriv ut b(10,n)
