@@ -1,4 +1,42 @@
 
+<blocks> ::= <block>,<block>... | <block>
+
+<block> ::= <assignment> | <output> | <input> | <condition> | <loop>
+
+<assignment> ::= <variable> '=' <expression> ';'
+
+<output> ::= 'print' '(' <expression> ')' ';' | 'print' '(' <variable> ')' ';'
+
+<input> ::= 'get_input' '(' <expression> ')' ';'
+
+<condition> ::= 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 'else if' '(' <bool-expression> ')' '{' <blocks> '}' ';'... 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 'else if' '(' <bool-expression> ')' '{' <blocks> '}' ';'... 'else' '{' <blocks> '}' ';'
+
+<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'
+| 'for_each' '(' <itrable> ')' '{' <blocks> '}' ';'
+| 'while' '(' <condition> ')' '{' <blocks> '}' ';'
+
+<expression> ::= <artim-expression> | <string-expresison> | <bool-expression>
+
+#Standard bnf för matte, http://matt.might.net/articles/grammars-bnf-ebnf/
+#<artim-expression> ::= <term> '+' <artim-expression> ';'
+#| <term> ';'
+#
+#<term> ::= <factor> '*' <term>
+#| <factor>
+#
+#<factor> ::= '(' <artim-expression> ')'
+#| <const>
+#
+#<const> ::= integer
+#
+
+<string-expression> ::= '"' string '"' ';'
+
+<bool-expression> ::= 'false' ';' | 'true' ';' | <condition> ';' 
+
+
 
 
 
