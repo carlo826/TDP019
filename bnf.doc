@@ -32,11 +32,11 @@
 #<const> ::= integer
 #
 
-<string-expression> ::= '"' string '"' ';'
+<string-expression> ::= '"' string '"' ';' | ''' string ''' ';'
 
-<bool-expression> ::= 'false' ';' | 'true' ';' | <condition> ';' 
+<bool-expression> ::= 'false' ';' | 'true' ';' | <comparison> ';' 
 
-
+<comparison> ::= integer '==' integer ';' | integer '!=' integer ';' | integer '<=' integer ';' | integer '=>' integer ';'
 
 
 
