@@ -2,6 +2,13 @@
 
 Deklaration av variabler, input och output: variabler måste deklareras med en typ innan de används. Input från användaren tas med funktionen get_input där argumentet blir meddelandet till användaren. Print funktionen skriver ut argumentet på en ny rad.
 
+Två varianter av deklerationer
+int x = 0;
+int x; 
+
+Tillsättning
+x = 5; 
+
 int x = 0;
 string b;
 b += get_input("Skriv in ett något:");

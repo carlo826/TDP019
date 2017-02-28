@@ -1,25 +1,41 @@
 
-<blocks> ::= <block>,<block>... | <block>
+<blocks> ::= <block>,<blocks> | <block>
 
 <block> ::= <assignment> | <output> | <input> | <condition> | <loop>
+
+
+<declartion> :: = <datatype> ' ' <variable> '=' <expression> ';'
+| <datatype> ' ' <variable> ';'
 
 <assignment> ::= <variable> '=' <expression> ';'
 
 <output> ::= 'print' '(' <expression> ')' ';' | 'print' '(' <variable> ')' ';'
 
-<input> ::= 'get_input' '(' <expression> ')' ';'
+<input> ::= 'get_input' '(' <string-expression> ')' ';'
 
-<condition> ::= 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 'else if' '(' <bool-expression> ')' '{' <blocks> '}' ';'... 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 'else if' '(' <bool-expression> ')' '{' <blocks> '}' ';'... 'else' '{' <blocks> '}' ';'
+<if-condition> ::= 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' '<elseif> 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' '<elseif> 'else' '{' <blocks> '}' ';'
 
-<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'
-| 'for_each' '(' <itrable> ')' '{' <blocks> '}' ';'
+
+<function> ::= 'def' <datatype> <string-expresison>'(' <parameters> ')' '{' <blocks> '}' ';'
+
+<parameters> ::= <datatype> ' ' <variable>
+| <datatype> ' ' <variable> ' ' <parameters>
+
+
+<elseif> ::= 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
+| 'elseif' '(' <bool-expression> ')' ';' '{' <blocks> '}' <elseif> ';'
+
+
+<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'				!! <iterable> ::= <list> // Hur gör vi med iterable?
+| 'for_each' '(' <iterable> ')' '{' <blocks> '}' ';'
 | 'while' '(' <condition> ')' '{' <blocks> '}' ';'
+ 
 
 <expression> ::= <artim-expression> | <string-expresison> | <bool-expression>
 
-#Standard bnf för matte, http://matt.might.net/articles/grammars-bnf-ebnf/
+
 #<artim-expression> ::= <term> '+' <artim-expression> ';'
 #| <term> ';'
 #
@@ -39,6 +55,6 @@
 <comparison> ::= integer '==' integer ';' | integer '!=' integer ';' | integer '<=' integer ';' | integer '=>' integer ';'
 
 
-
+#Standard bnf för matte, http://matt.might.net/articles/grammars-bnf-ebnf/
 Grammatik
 <STATEMENTS> ::= <STATEMENTS> | <STATEMENTS>
