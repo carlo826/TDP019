@@ -1,37 +1,104 @@
 
-<blocks> ::= <block>,<blocks> | <block>
+<blocks> ::= <block>,<blocks> 
+| <block>
 
-<block> ::= <assignment> | <output> | <input> | <condition> | <loop>
-
+<block> ::= <declartion>
+| <assignment> 
+| <output> 
+| <input> 
+| <condition> 
+| <loop>
 
 <declartion> :: = <datatype> ' ' <variable> '=' <expression> ';'
 | <datatype> ' ' <variable> ';'
 
 <assignment> ::= <variable> '=' <expression> ';'
 
-<output> ::= 'print' '(' <expression> ')' ';' | 'print' '(' <variable> ')' ';'
+
+
+<output> ::= 'print' '(' <expression> ')' ';' 
+| 'print' '(' <variable> ')' ';'
+
+print("string");
 
 <input> ::= 'get_input' '(' <string-expression> ')' ';'
 
+get_input("Pick a number");
+
+
+
+
+
+
+
 <if-condition> ::= 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' '<elseif> 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' '<elseif> 'else' '{' <blocks> '}' ';'
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> ';' 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> 'else' '{' <blocks> '}' ';'
+
+<elseif> ::= 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
+| 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' <elseif> ';'
 
 
-<function> ::= 'def' <datatype> <string-expresison>'(' <parameters> ')' '{' <blocks> '}' ';'
+
+
+
+
+
+
+<function> ::= 'def' <datatype> <string-expression>'(' <parameters> ')' '{' <blocks> '}' ';'
+| def <datatype> <string-expression> '(' ')' '{' <blocks> '}' ';'
+
+def int funktionsNamn(int argument){
+	
+};
 
 <parameters> ::= <datatype> ' ' <variable>
 | <datatype> ' ' <variable> ' ' <parameters>
 
+<argument> ::= <expression> 
+| <variable>
 
-<elseif> ::= 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
-| 'elseif' '(' <bool-expression> ')' ';' '{' <blocks> '}' <elseif> ';'
+
+<function-call> ::= <string-expression> '(' ')'
+| <string-expression> '(' <expression> ')'
 
 
-<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'				!! <iterable> ::= <list> // Hur gör vi med iterable?
+
+def int faktor(int argument)
+
+faktor(argument)
+
+
+
+
+<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'				
+
+
+<array> ::= '[' ']' 
+| '[' <variable> ']'
+| '[' <variable>, <variables> ']'
+
 | 'for_each' '(' <iterable> ')' '{' <blocks> '}' ';'
 | 'while' '(' <condition> ')' '{' <blocks> '}' ';'
+
  
+
+print()
+
+
+
+
+<variable> ::= /[A-z]+[A-z0-9]+/
+
+
+
+
+<datatype> ::= 'int'
+| 'string'
+| 'bool'
+| 'array'
+| 'char'
+| 'float'
 
 <expression> ::= <artim-expression> | <string-expresison> | <bool-expression>
 
@@ -45,16 +112,29 @@
 #<factor> ::= '(' <artim-expression> ')'
 #| <const>
 #
-#<const> ::= integer
+#<const> ::= <integer>
 #
+#<integer> ::= /[0-9]+/ 
 
-<string-expression> ::= '"' string '"' ';' | ''' string ''' ';'
+<string-expression> ::= '"' string '"' ';' 
+| ''' string ''' ';'
 
-<bool-expression> ::= 'false' ';' | 'true' ';' | <comparison> ';' 
+<bool-expression> ::= 'false' ';' | 'true' ';' 
+| <comparison> ';' 
 
-<comparison> ::= integer '==' integer ';' | integer '!=' integer ';' | integer '<=' integer ';' | integer '=>' integer ';'
+<comparison> ::= integer '==' integer ';' 
+| <integer> '!=' <integer> ';' 
+| <integer> '<=' <integer> ';' 
+| <integer> '>=' <integer> ';' 
+| <integer> '<' <integer> ';' 
+| <integer> '>' <integer> ';' 
 
 
-#Standard bnf för matte, http://matt.might.net/articles/grammars-bnf-ebnf/
-Grammatik
-<STATEMENTS> ::= <STATEMENTS> | <STATEMENTS>
+
+
+
+
+
+<comments> ::= '#' /.+/
+| '//*' /[.\n]+/ '//'
+
