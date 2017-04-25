@@ -1,23 +1,12 @@
 #!/usr/bin/env ruby
 
-# This file is called rdparse.rb because it implements a Recursive
-# Descent Parser. Read more about the theory on e.g.
-# http://en.wikipedia.org/wiki/Recursive_descent_parser
-
 # 2010-02-11 New version of this file for the 2010 instance of TDP007
 #   which handles false return values during parsing, and has an easy way
 #   of turning on and off debug messages.
-# 2014-02-16 New version that handles { false } blocks and :empty tokens.
 
+require 'logger'
 
 class Rule
-
-  # A rule is created through the rule method of the Parser class, like this:
-  #   rule :term do
-  #     match(:term, '*', :dice) {|a, _, b| a * b }
-  #     match(:term, '/', :dice) {|a, _, b| a / b }
-  #     match(:dice)
-  #   end
   
   Match = Struct.new :pattern, :block
   
@@ -67,7 +56,7 @@ class Rule
     start = @parser.pos
     matches.each do |match|
       # pre_result is a previously available result from evaluating expressions
-      result = pre_result.nil? ? [] : [pre_result]
+      result = pre_result ? [pre_result] : []
 
       # We iterate through the parts of the pattern, which may be e.g.
       #   [:expr,'*',:term]
@@ -81,7 +70,7 @@ class Rule
             result = nil
             break
           end
-          @logger.debug("Matched '#{@name} = #{match.pattern[index..-1].inspect}'")
+          #@logger.debug("Matched '#{@name} = #{match.pattern[index..-1].inspect}'")
         else
           # Otherwise, we consume the token as part of applying this rule
           nt = @parser.expect(token)
@@ -92,7 +81,7 @@ class Rule
             else
               pattern = match.pattern
             end
-            @logger.debug("Matched token '#{nt}' as part of rule '#{@name} <= #{pattern.inspect}'")
+            #@logger.debug("Matched token '#{nt}' as part of rule '#{@name} <= #{pattern.inspect}'")
           else
             result = nil
             break
@@ -105,7 +94,7 @@ class Rule
         else
           match_result = result[0]
         end
-        @logger.debug("'#{@parser.string[start..@parser.pos-1]}' matched '#{@name}' and generated '#{match_result.inspect}'") unless match_result.nil?
+        #@logger.debug("'#{@parser.string[start..@parser.pos-1]}' matched '#{@name}' and generated '#{match_result.inspect}'") unless match_result.nil?
         break
       else
         # If this rule did not match the current token list, move
@@ -121,7 +110,7 @@ end
 class Parser
 
   attr_accessor :pos
-  attr_reader :rules, :string, :logger
+  attr_reader :rules, :string, :logger,:lex_tokens, :current_rule
 
   class ParseError < RuntimeError
   end
@@ -146,7 +135,7 @@ class Parser
         match = tok.pattern.match(string)
         # The regular expression of a token has matched the beginning of 'string'
         if match
-          @logger.debug("Token #{match[0]} consumed")
+          #@logger.debug("Token #{match[0]} consumed")
           # Also, evaluate this expression by using the block
           # associated with the token
           @tokens << tok.block.call(match.to_s) if tok.block
@@ -187,7 +176,6 @@ class Parser
 
   # Return the next token in the queue
   def expect(tok)
-    return tok if tok == :empty
     t = next_token
     if @pos - 1 > @max_pos
       @max_pos = @pos - 1
@@ -212,6 +200,7 @@ class Parser
   
   def start(name, &block)
     rule(name, &block)
+    
     @start = @rules[name]
   end
   
@@ -225,7 +214,5 @@ class Parser
   def match(*pattern, &block)
     @current_rule.send(:match, *pattern, &block)
   end
-
+	
 end
-
-
