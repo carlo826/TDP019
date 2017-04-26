@@ -2,22 +2,23 @@
 <blocks> ::= <block>,<blocks> 
 | <block>
 
-<block> ::= <declartion>
+<block> ::= 
+| <declaration>
 | <assignment> 
 | <output> 
 | <input> 
 | <condition> 
 | <loop>
 
-<declartion> :: = <datatype> ' ' <variable> '=' <expression> ';'
-| <datatype> ' ' <variable> ';'
+<declaration> :: = <datatype> ' ' <varName> '=' <expression> ';'
+| <datatype> ' ' <varName> ';'
 
-<assignment> ::= <variable> '=' <expression> ';'
+<assignment> ::= <varName> '=' <expression> ';'
 
 
 
 <output> ::= 'print' '(' <expression> ')' ';' 
-| 'print' '(' <variable> ')' ';'
+| 'print' '(' <varName> ')' ';'
 
 print("string");
 
@@ -52,11 +53,11 @@ def int funktionsNamn(int argument){
 	
 };
 
-<parameters> ::= <datatype> ' ' <variable>
-| <datatype> ' ' <variable> ' ' <parameters>
+<parameters> ::= <datatype> ' ' <varName>
+| <datatype> ' ' <varName> ' ' <parameters>
 
 <argument> ::= <expression> 
-| <variable>
+| <varName>
 
 
 <function-call> ::= <string-expression> '(' ')'
@@ -74,9 +75,13 @@ faktor(argument)
 <loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'				
 
 
+<varNames> ::= <varName>,<varNames>
+| <varName>
+
+
 <array> ::= '[' ']' 
-| '[' <variable> ']'
-| '[' <variable>, <variables> ']'
+| '[' <varName> ']'
+| '[' <varName>, <varNames> ']'
 
 | 'for_each' '(' <iterable> ')' '{' <blocks> '}' ';'
 | 'while' '(' <condition> ')' '{' <blocks> '}' ';'
@@ -88,7 +93,7 @@ print()
 
 
 
-<variable> ::= /[A-z]+[A-z0-9]+/
+<varName> ::= /[A-z]+[A-z0-9]+/
 
 
 
@@ -107,6 +112,8 @@ print()
 #| <term> ';'
 #
 #<term> ::= <factor> '*' <term>
+#| <factor> '/' <term>
+#| <factor> '%' <term>
 #| <factor>
 #
 #<factor> ::= '(' <artim-expression> ')'

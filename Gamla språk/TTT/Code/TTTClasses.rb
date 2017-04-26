@@ -69,6 +69,28 @@ def declare_variable(variable,expr,type)
     end
 end
 
+
+class Variable_reasgn_c
+    def initialize(id, newval)
+        @id = id
+        @newval = newval
+#puts "newval: #{@newval.eval}"
+    end
+    def eval
+        for scope in @@variables.reverse
+            if scope[@id]
+            #puts "reasigning, old val: #{i[@id][1]}"
+                scope[@id][1] = @newval.eval
+            #puts "reasigning, new val: #{i[@id][1]}"
+                return scope[@id][1]
+            end
+        end
+    puts "No variable found with name #{@id}!"
+    return nil
+    
+    end
+end
+
 ####################### SCOPE CONTROL ##############################
 
 def new_scope()
