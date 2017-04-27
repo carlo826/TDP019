@@ -33,16 +33,18 @@ class Lingua
             token(/for/) {|m| m}
             token(/\]/) {|m| m}
             token(/\[/) {|m| m}
+            token(/\d+\.\d+/) {|m| m.to_f}
 
+            token(/float/) {|m| m}
             token(/int/) {|m| m}
             token(/string/) {|m| m}
             token(/bool/) {|m|m}
             # match('void') {|m| m} // Implementera rule :returnValues do <--.
             token(/array/) {|m| m}
             token(/char/) {|m| m}
-            token(/\'.{1}\'/) {|m| m}
+    
+            token(/\'.+\'/) {|m| m}
 
-            token(/float/) {|m| m}
             token(/\d+/){|m| m.to_i }
             token(/\==/) {|m| m} #=/
             token(/<=/) {|m| m} #=/
@@ -86,6 +88,7 @@ class Lingua
 
 
             rule :declaration do
+
                 match(:datatype, :varName, '=', :expression,';') {|datatype, varName, _, expression, _| DeclareVar.new(datatype,
                 varName, expression) } # Asgn_stmt_c.new(type, id, aritm_expr)}
                 match(:datatype, :varName, ';') {|datatype, varName, _, expression, _| DeclareVar.new(datatype,varName, expression) }
@@ -100,7 +103,9 @@ class Lingua
                 match(/[A-z]+[A-z0-9]*/) {|m| m } #{|m| Variable_finder_c.new(m)}
 
             end
-            
+
+
+
             rule :expression do
                 match(:aritm_expression)
                 match(:bool_expression)
@@ -131,18 +136,21 @@ class Lingua
             rule :bool_expression do
 
                 # match(Integer, :comparison_operator, Integer ) {|a, b, c| Comparison.new(a, b, c) }
-                match('(', Integer, :comparison_operator, Integer,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
+                match('(', :aritm_expression, :comparison_operator, :aritm_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
+                match('(', :bool_expression, :comparison_operator, :bool_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
+                match('(', :bool_expression, :logic_operator, :bool_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
                 # match('(', :bool_expression, :logic_operator, :bool_expression,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
-                match('true') { | m | m }
-                match('false') { | m | m }
+                match('true') { | m | Bool_node.new(Integer_node.new(1), '<', Integer_node.new(2)) }
+                match('false') { | m | Bool_node.new(Integer_node.new(2), '<', Integer_node.new(1)) }
+                match(:varName)
             end
+       
+            rule :logic_operator do
+                match('&&') {|m| m }
+                match('||') {|m| m }
+                # match('!') {|m| m }
 
-            # rule :logic_operator do
-            #     match('&&') {|m| m }
-            #     match('||') {|m| m }
-            #     match('!') {|m| m }
-
-            # end
+            end
             
             rule :comparison_operator do
                 match('==') {|m| m }
@@ -152,8 +160,9 @@ class Lingua
                 match('<')  {|m| m }
                 match('<=') {|m| m }
             end
+            
             rule :char_expression do
-                match(/\'.{1}\'/) {|m | Char_node.new(m)}
+                match(/\'.+\'/) {|m | Char_node.new(m)}
 
             end
             rule :string_expression do
@@ -163,13 +172,13 @@ class Lingua
             end
 
             rule :datatype do
+                match('float') {|m| m}
                 match('int') {|m| m}
                 match('string') {|m| m}
                 match('bool') {|m|m}
                 # match('void') {|m| m} // Implementera rule :returnValues do <--.
                 match('array') {|m| m}
                 match('char') {|m| m}
-                match('float') {|m| m}
             end
         end
     end

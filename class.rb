@@ -42,19 +42,71 @@ end
 
 class DeclareVar
 	def initialize(datatype, varName, expression=nil)
+		p expression
+		puts "class: #{expression.class}"
 		@datatype = datatype
 		@varName = varName
 		@expression = expression
+		puts "delccc"
+
 
 	end
 	def eval()
 		p "välkommen till decl+"
+		if @expression.class == String && @@global_var[@@scope].include?(@expression)
+			p "striiing"
+			expr = @@global_var[@@scope][@expression][1]
+			p expr
+			@@global_var[@@scope][@varName] = [@datatype, expr]
+		end
+		if (@datatype == 'string' && @expression.class != String_node)
+			puts "Invalid String value"
+			return
+		end
+		if (@datatype == 'float' && @expression.class != Float_node)
+			puts "Invalid Floatat value"
+			return
+		end		
+		if (@datatype == 'int' && @expression.class != Integer_node)
+			puts "Invalid Integer value, value is #{@expression.class}"
+			# puts "Invalid Integer value, value"
+			return
+		end
+		if (@datatype == 'bool' && @expression.class != Bool_node)
+			puts "Invalid bool value"
+			return
+		end		
+		if (@datatype == 'char' && @expression.class != Char_node)
+			puts "Invalid char value"
+			return
+		
+		elsif (@datatype == 'char' && @expression.class == Char_node && @expression.length() > 1)
+			puts "Invalid char length"
+			return
+		end
+
 		if (@expression != nil)
 			@@global_var[@@scope][@varName] = [@datatype, @expression.eval()]
+
 		else
+			p "skapar variabel"
 			@@global_var[@@scope][@varName] = [@datatype, @expression]
 		end
+		# end
 		# return @expression.eval()
+
+		# else
+		# 	if @expression.class == Bool_node
+
+		# 		if (@expression.a != true || false)
+		# 			a = @@global_var[@@scope][@expression.a][1]
+		# 		end
+
+		# 		if (@expression.b != true || false)
+		# 			b = @@global_var[@@scope][@expression.b][1]
+		# 		end
+		# 		@@global_var[@@scope][@varName] = [@datatype, eval(a, @expression.operator, b)]
+
 
 	end
 end
@@ -67,6 +119,7 @@ class ReaVar
 	end
 
 	def eval()
+		p "reavar eval"
 		for scope in @@global_var #.reverse()?
 			if scope[@varName]
 				scope[@varName][1] = @expression.eval()
@@ -125,16 +178,34 @@ end
 
 class Char_node
 	def initialize(value)
-
+		# if (value.length() > 1 )
+		# 	p "FEL"
+		# else
 		@value = value.tr("'",'')
+		# end
+	
 	end
 	def eval()
 		return @value
 	end
+
+	def length()
+		return @value.length()
+	end
 end
 
+# class Bool_node
+# 	def initialize(a, operator, b)
 
-class Comparison
+# 		@value = value
+# 	end
+# 	def eval()
+# 		return @value
+# 	end
+# end
+
+
+class Bool_node
 	attr_accessor :a, :operator, :b
 
 	def initialize(a, operator ,b)
@@ -144,6 +215,6 @@ class Comparison
 	end
 
 	def eval()
-		instance_eval("#{@a.eval} #{@operator} #{@b.eval}")
+		instance_eval("#{@a.eval} #{@operator} #{@b.eval}")	
 	end
 end 
