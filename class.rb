@@ -42,179 +42,269 @@ end
 
 class DeclareVar
 	def initialize(datatype, varName, expression=nil)
-		p expression
-		puts "class: #{expression.class}"
+
 		@datatype = datatype
 		@varName = varName
 		@expression = expression
-		puts "delccc"
-
-
 	end
 	def eval()
-		p "välkommen till decl+"
-		if @expression.class == String && @@global_var[@@scope].include?(@expression)
-			p "striiing"
-			expr = @@global_var[@@scope][@expression][1]
-			p expr
-			@@global_var[@@scope][@varName] = [@datatype, expr]
-		end
-		if (@datatype == 'string' && @expression.class != String_node)
-			puts "Invalid String value"
-			return
-		end
-		if (@datatype == 'float' && @expression.class != Float_node)
-			puts "Invalid Floatat value"
-			return
-		end		
-		if (@datatype == 'int' && @expression.class != Integer_node)
-			puts "Invalid Integer value, value is #{@expression.class}"
-			# puts "Invalid Integer value, value"
-			return
-		end
-		if (@datatype == 'bool' && @expression.class != Bool_node)
-			puts "Invalid bool value"
-			return
-		end		
-		if (@datatype == 'char' && @expression.class != Char_node)
-			puts "Invalid char value"
-			return
-		
-		elsif (@datatype == 'char' && @expression.class == Char_node && @expression.length() > 1)
-			puts "Invalid char length"
-			return
-		end
 
-		if (@expression != nil)
-			@@global_var[@@scope][@varName] = [@datatype, @expression.eval()]
+        if @expression.class == Find_Variable
+            @@global_var[@@scope][@varName.eval()] = [@datatype, @@global_var[@@scope][@expression.eval()][1]]
+        elsif @expression == nil
+            @@global_var[@@scope][@varName.eval()] = [@datatype, nil]
 
-		else
-			p "skapar variabel"
-			@@global_var[@@scope][@varName] = [@datatype, @expression]
-		end
-		# end
-		# return @expression.eval()
-
-		# else
-		# 	if @expression.class == Bool_node
-
-		# 		if (@expression.a != true || false)
-		# 			a = @@global_var[@@scope][@expression.a][1]
-		# 		end
-
-		# 		if (@expression.b != true || false)
-		# 			b = @@global_var[@@scope][@expression.b][1]
-		# 		end
-		# 		@@global_var[@@scope][@varName] = [@datatype, eval(a, @expression.operator, b)]
-
-
+        else
+            @@global_var[@@scope][@varName.eval()] = [@datatype, @expression.eval()]
+        end
+  
 	end
 end
 
 class ReaVar
 	def initialize(varName, expression)
-		p "initieras reavar"
 		@varName = varName
 		@expression = expression
 	end
-
-	def eval()
-		p "reavar eval"
-		for scope in @@global_var #.reverse()?
-			if scope[@varName]
-				scope[@varName][1] = @expression.eval()
-				return scope[@varName][1]
-			end
-		end
-    	puts "Variabel Error: No variable found with name #{@id}!"
-    	return nil 
-	end
+    def eval()
+        for scope in @@global_var #.reverse()?
+            if scope[@varName.eval()]
+                if @expression.class == Find_Variable
+                    scope[@varName.eval()][1] = scope[@expression.eval()][1]
+                    return nil
+                else
+                    scope[@varName.eval()][1] = @expression.eval()
+                    return nil
+                end 
+            end
+        end
+        puts "Variabel Error: No variable found with name #{@varName}!"
+        return nil 
+    end
 end
 
+class Find_Variable
+    def initialize(varName)
+        @varName = varName
+    end
+    def eval
+        p @@global_var
+        for scope in @@global_var 
+            if scope[@varName]
+                return @varName #.eval()
+                # return scope[@varName][1] #.eval()
+            end
+        end
+        puts "NameError: undefined local variable or method #{@varName} for main:Object"
+        return @varName
+    end
+end
 
 class Aritm_node
-	attr_accessor :a, :operator, :b
+    attr_accessor :a, :operator, :b
 
-	def initialize(a, operator ,b)
-		@a = a
-		@operator = operator
-		@b = b
-	end
+    def initialize(a, operator ,b)
+        @a = a
+        @operator = operator
+        @b = b
+    end
 
-	def eval()
-		instance_eval("#{@a.eval} #{@operator} #{@b.eval}")
-	end
+    def eval()
+        instance_eval("#{@a.eval} #{@operator} #{@b.eval}")
+    end
 end 
 
 
 
 class Float_node
-	def initialize(value)
-		@value = value
-	end
-	def eval()
-		return @value
-	end
+    def initialize(value)
+        puts "Skapar float"
+        @value = value
+    end
+    def eval()
+        return @value
+    end
 end
 
 class Integer_node
-	def initialize(value)
-		@value = value
-	end
-	def eval()
-		return @value
-	end
+    def initialize(value)
+        puts "integgerrr"
+        @value = value
+    end
+    def eval()
+        return @value
+    end
 end
 
 class String_node
-	def initialize(value)
-
-		@value = value.tr('"','')
-	end
-	def eval()
-		return @value
-	end
+    def initialize(value)
+        puts "striiiing_node"
+        @value = value.tr('"','')
+    end
+    def eval()
+        return @value
+    end
 end
 
 class Char_node
-	def initialize(value)
-		# if (value.length() > 1 )
-		# 	p "FEL"
-		# else
-		@value = value.tr("'",'')
-		# end
-	
-	end
-	def eval()
-		return @value
-	end
+    def initialize(value)
+        # if (value.length() > 1 )
+        #   p "FEL"
+        # else
+        @value = value.tr("'",'')
+        # end
+    
+    end
+    def eval()
+        return @value
+    end
 
-	def length()
-		return @value.length()
-	end
+    def length()
+        return @value.length()
+    end
 end
 
-# class Bool_node
-# 	def initialize(a, operator, b)
-
-# 		@value = value
-# 	end
-# 	def eval()
-# 		return @value
-# 	end
-# end
-
-
 class Bool_node
-	attr_accessor :a, :operator, :b
+  def initialize(value)
+      @value = value
+  end
+  def eval()
+      return @value
+  end
+end
 
-	def initialize(a, operator ,b)
-		@a = a
-		@operator = operator
-		@b = b
-	end
 
-	def eval()
-		instance_eval("#{@a.eval} #{@operator} #{@b.eval}")	
-	end
+class Comparison_node
+    attr_accessor :a, :operator, :b
+
+    def initialize(a, operator ,b)
+        @a = a
+        @operator = operator
+        @b = b
+    end
+
+    def eval()
+        instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
+    end
 end 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#       puts
+  #       p @@global_var
+  #       p @expression
+  #       p @expression.class
+  #       for varName in @@global_var #.reverse()?
+  #           if varName[@expression]
+  #               puts "hitta namnet"
+  #           end
+  #       end
+
+  #       if (@expression == nil)
+  #           puts "nilclassiisi"
+  #           if @datatype == "string"
+  #               @expression = String_node.new("nilClass")
+  #           end
+  #           # if @datatype == "bool"
+  #           #     @expression = Bool_node.new("nilClass")
+  #           # end
+  #           if @datatype == "int"
+  #               @expression = Integer_node.new("nilClass")
+  #           end
+  #           if @datatype == "float"
+  #               @expression = Float_node.new("nilClass")
+  #           end
+
+
+  #           @@global_var[@@scope][@varName] = [@datatype, @expression]
+  #           puts "Creating variabel with NilClass}"
+
+        # elsif (@datatype == 'string' && @expression.class != String_node)
+        #   puts "Invalid string value, value is #{@expression.class}"
+        #   return
+        
+        # elsif (@datatype == 'float' && @expression.class != Float_node)
+        #   puts "Invalid float value, value is #{@expression.class}"
+        #   return
+                
+        # elsif (@datatype == 'int' && @expression.class != Integer_node)
+        #   puts "Invalid Integer value, value is #{@expression.class}"
+  #           p @varName.eval()
+        #   # puts "Invalid Integer value, value"
+        #   return
+        
+        # elsif (@datatype == 'bool' && @expression.class != Bool_node)
+        #   puts "Invalid bool value, value is #{@expression.class}"
+        #   return
+                
+        # elsif (@datatype == 'char' && @expression.class != Char_node)
+        #   puts "Invalid char value, value is #{@expression.class}"
+        #   return
+        
+        # elsif (@datatype == 'char' && @expression.class == Char_node && @expression.length() > 1)
+        #   puts "Invalid char length"
+        #   return
+        # else
+  #           puts "Creating variabel #{@expression.eval()}"
+  #           p @varName.eval()
+        #   @@global_var[@@scope][@varName] = [@datatype, @expression.eval()]
+        # end
+        # end
+        # return @expression.eval()
+
+        # else
+        #   if @expression.class == Bool_node
+
+        #       if (@expression.a != true || false)
+        #           a = @@global_var[@@scope][@expression.a][1]
+        #       end
+
+        #       if (@expression.b != true || false)
+        #           b = @@global_var[@@scope][@expression.b][1]
+        #       end
+        #       @@global_var[@@scope][@varName] = [@datatype, eval(a, @expression.operator, b)]
+
+
+
+    # def eval()
+    #   p "reavar eval"
+ #        # p @@global_var[0][@varName]
+    #   for scope in @@global_var #.reverse()?
+ #            p scope[@varName]
+    #       if scope[@varName]
+ #                # p "eval()()()"
+ #                if scope[@varName][1].class == @expression.eval().class
+ #                  scope[@varName][1] = @expression.eval()
+ #                  return scope[@varName][1]
+ #                elsif scope[@varName][1].class == @expression.class
+ #                    scope[@varName][1] = @expression.eval()
+ #                    return scope[@varName][1]
+ #                else
+ #                    puts "#{scope[@varName][1].class} AssignError: #{@expression.class} is wrong type."
+ #                    return
+ #                end
+
+ #            end
+ #        end
+ #        puts "Variabel Error: No variable found with name #{@id}!"
+ #        return @ 
+ #    end
