@@ -53,8 +53,8 @@ class Lingua
             token(/\=/)  {|m| m} #=/
             token(/\+\+/) {|m| m}
             token(/--/) {|m| m}
-            token(/||/) {|m| m}
-            token(/&&/) {|m| m}
+            token(/\|\|/) {|m| m}
+            token(/\&\&/) {|m| m}
             token(/!/) {|m| m}
             token(/\+/) {|m| m}
             token(/\*/) {|m| m}
@@ -79,8 +79,8 @@ class Lingua
             rule :block do
                 match(:declaration)
                 match(:assignment) 
-                # match(:condition)
-                # match(:output)
+                match(:if_condition)
+                match(:output)
                 # match(:input)
                 # match(:loop)
             end
@@ -93,10 +93,25 @@ class Lingua
                 match(:datatype, :varName, '=', :varName, ';') {|datatype, varName, _, expression, _| DeclareVar.new(datatype,
                 varName, expression) }
             end
+
             rule :assignment do
                 match(:varName, '=', :expression, ';') {|varName, _, expression, _ | ReaVar.new(varName, expression) }
                 match(:varName, '=', :varName, ';') {|varName, _, expression, _ | ReaVar.new(varName, expression) }
             end
+
+
+            rule :output do
+                match('print', '(', :expression, ')', ';') {|_, _, expression, _ | Print_expr.new(expression) }
+                match('print', '(', :varName, ')', ';') {|_, _, varName, _ | Print_expr.new(varName) }
+
+            end
+
+            rule :if_condition do
+                match('if', :bool_expression, '{', :blocks, '}',';') {|_, a, _, b, _,_| If_condition_node.new(a,b)}
+            end
+
+        
+
 
             rule :expression do
                 match(:aritm_expression)
@@ -143,8 +158,8 @@ class Lingua
                 # match('(', :bool_expression, :comparison_operator, :bool_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
                 match('(', :bool_expression, :logic_operator, :bool_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
                 # match('(', :aritm_expression, :logic_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
-                match('true') { | m | Bool_node.new(true)}
-                match('false') { | m | Bool_node.new(false)}
+                match('(', 'true',')') { |_,m,_ | Bool_node.new(true)}
+                match('(', 'false',')') { |_,m,_| Bool_node.new(false)}
                 # match(:varName)
             end
             rule :logic_operator do
@@ -180,12 +195,38 @@ class Lingua
     def done(str)
         ["quit","exit","bye",""].include?(str.chomp)
     end
-  
+
+    def openFile()
+        output = ""
+        if (File.exist?('lingua.rb')) then
+            File.open('lingua.rb', 'r') do |line|
+                str = line.readlines
+                output = str.join
+            end
+            puts "=> #{@LinguaParser.parse output}"
+        else
+            # puts "=> FileError: #{inFile} not found"
+        end
+        
+        
+    end
+
     def lingua
         print "[LinguaParser] "
         str = gets
+        # if (file(str))
+        #     fileName = str.gsub(/load\s*/,"").strip.chomp
+        #     puts fileName
+        #     str = ""
+        #     if File.exist?(fileName)
+        #         File.open(fileName, 'r') do |line|
+        #             temp = line.readlines
+        #             str = temp.join
+        #         end
+
         if done(str) then
             puts "Bye."
+
         elsif str.chomp.eql?('gb')
             print @@global_var
             lingua
@@ -194,6 +235,7 @@ class Lingua
             lingua
         end
     end
+
 
     def log(state = false)
         if state
@@ -205,7 +247,9 @@ class Lingua
 end
 
 
-Lingua.new.lingua
+test = Lingua.new
+test.openFile
+# Lingua.new.lingua
 
 
 

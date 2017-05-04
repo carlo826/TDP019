@@ -9,6 +9,22 @@
 # Global Variables
 @@scope = 0
 @@global_var = [{}]
+@@debug = true;
+
+def incr_scope
+	@@global_var << {} #index symbolizes scope
+	@@scope += 1
+	puts "Incrementing scope with 1 \n Scope count: #{@@scope}" if @@debug
+end
+
+def decr_scope
+	@@global_var.pop
+	@@scope -= 1
+	puts "Decrementing scope with -1 \n Scope count: #{@@scope}"
+	if @@scope < 0
+		raise("You cannot close base scope!")
+	end
+end
 
 
 
@@ -40,6 +56,7 @@ class Block
 	end
 end
 
+
 class DeclareVar
 	def initialize(datatype, varName, expression=nil)
 
@@ -50,12 +67,13 @@ class DeclareVar
 	def eval()
 
         if @expression.class == Find_Variable
-            @@global_var[@@scope][@varName.eval()] = [@datatype, @@global_var[@@scope][@expression.eval()][1]]
+            @@global_var[@@scope][@varName.get_name()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+
         elsif @expression == nil
-            @@global_var[@@scope][@varName.eval()] = [@datatype, nil]
+            @@global_var[@@scope][@varName.get_name()] = [@datatype, nil]
 
         else
-            @@global_var[@@scope][@varName.eval()] = [@datatype, @expression.eval()]
+            @@global_var[@@scope][@varName.get_name()] = [@datatype, @expression.eval()]
         end
   
 	end
@@ -66,14 +84,15 @@ class ReaVar
 		@varName = varName
 		@expression = expression
 	end
+
     def eval()
         for scope in @@global_var #.reverse()?
-            if scope[@varName.eval()]
+            if scope[@varName.get_name()]
                 if @expression.class == Find_Variable
-                    scope[@varName.eval()][1] = scope[@expression.eval()][1]
+                    scope[@varName.get_name()][1] = scope[@expression.get_name()][1]
                     return nil
                 else
-                    scope[@varName.eval()][1] = @expression.eval()
+                    scope[@varName.get_name()][1] = @expression.eval()
                     return nil
                 end 
             end
@@ -83,16 +102,31 @@ class ReaVar
     end
 end
 
+
 class Find_Variable
     def initialize(varName)
         @varName = varName
     end
-    def eval
-        p @@global_var
+
+    def get_name
         for scope in @@global_var 
             if scope[@varName]
                 return @varName #.eval()
                 # return scope[@varName][1] #.eval()
+            end
+        end
+        puts "NameError: undefined local variable or method #{@varName} for main:Object"
+        return @varName
+
+    end
+
+
+    def eval
+        p @@global_var
+        for scope in @@global_var 
+            if scope[@varName]
+                # return @varName #.eval()
+                return scope[@varName][1] #.eval()
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
@@ -118,7 +152,6 @@ end
 
 class Float_node
     def initialize(value)
-        puts "Skapar float"
         @value = value
     end
     def eval()
@@ -189,9 +222,53 @@ class Comparison_node
 end 
 
 
+class Print_expr
+	def initialize(expr)
+		@expr = expr
+	end
+	def eval
+		printer = @expr.eval
+		puts printer
+		return printer
+	end
+end
 
 
+class If_condition_node
+	def initialize(condition, blocks)
+		@condition = condition
+		@blocks = blocks
+	end
 
+	def eval
+		incr_scope
+		if @condition.eval
+			return_val = @blocks.eval
+			decr_scope
+			return return_val
+		end
+		decr_scope
+	end
+end
+
+
+# class If_else_condition_node
+# def initialize(cond, stmts, else_stmts)
+# @cond = cond
+# @stmts = stmts
+# @else_stmts = else_stmts
+# end
+# def eval
+# open_scope
+# if @cond.eval
+# return_value = @stmts.eval
+# else
+# return_value = @else_stmts.eval
+# end
+# close_scope
+# return return_value
+# end
+# end
 
 
 
