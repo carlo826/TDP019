@@ -1,3 +1,1 @@
-if(true){
-	print("DET ÄR SANT");
-};
+int i = 0;i = 3;

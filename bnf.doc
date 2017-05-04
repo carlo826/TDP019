@@ -39,6 +39,15 @@ get_input("Pick a number");
 <elseif> ::= 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
 | 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' <elseif> ';'
 
+if (1>10){
+	print("det är falsk!");
+};
+elseif (2 > 10){
+	print("också falskt");
+};
+else{
+	print("TRUE");
+}
 
 
 

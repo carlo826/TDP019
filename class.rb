@@ -67,13 +67,13 @@ class DeclareVar
 	def eval()
 
         if @expression.class == Find_Variable
-            @@global_var[@@scope][@varName.get_name()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+            @@global_var[@@scope][@varName.returnName()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
 
         elsif @expression == nil
-            @@global_var[@@scope][@varName.get_name()] = [@datatype, nil]
+            @@global_var[@@scope][@varName.returnName()] = [@datatype, nil]
 
         else
-            @@global_var[@@scope][@varName.get_name()] = [@datatype, @expression.eval()]
+            @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
         end
   
 	end
@@ -108,6 +108,10 @@ class Find_Variable
         @varName = varName
     end
 
+    def returnName
+    	@varName
+    end
+
     def get_name
         for scope in @@global_var 
             if scope[@varName]
@@ -116,7 +120,9 @@ class Find_Variable
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
-        return @varName
+        p @@global_var
+        return
+        # return @varName
 
     end
 
@@ -130,7 +136,8 @@ class Find_Variable
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
-        return @varName
+        return
+        # return @varName
     end
 end
 
@@ -223,51 +230,111 @@ end
 
 
 class Print_expr
-	def initialize(expr)
+	def initialize(expr=nil)
 		@expr = expr
 	end
 	def eval
-		printer = @expr.eval
-		puts printer
-		return printer
+		if (@expr != nil)
+			printer = @expr.eval
+			puts printer
+			return printer
+		else
+			puts "No input for print"
+		end
 	end
 end
 
-
-class If_condition_node
-	def initialize(condition, blocks)
-		@condition = condition
-		@blocks = blocks
+class Conditions_Node
+	def initialize(conditional, ifbranch, elsebranch=nil)
+		@conditional = conditional
+		@ifbranch = ifbranch
+		@elsebranch = elsebranch
 	end
 
 	def eval
-		incr_scope
-		if @condition.eval
-			return_val = @blocks.eval
-			decr_scope
-			return return_val
+		if(@conditional == true)
+			conditional = true
+		else
+			conditional = @conditional.eval()
 		end
-		decr_scope
+		if (conditional)
+			return_value = @ifbranch.eval()
+		else
+			if (@elsebranch != nil)
+				return_value = @elsebranch.eval()
+			end
+		end
+		return return_value
 	end
 end
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+# class If_condition_node
+# 	def initialize(condition, blocks)
+# 		@condition = condition
+# 		@blocks = blocks
+# 	end
+
+# 	def eval
+# 		incr_scope
+# 		if @condition.eval
+# 			return_val = @blocks.eval
+# 			decr_scope
+# 			return return_val
+# 		end
+# 		decr_scope
+# 	end
+# end
+
+
 # class If_else_condition_node
-# def initialize(cond, stmts, else_stmts)
-# @cond = cond
-# @stmts = stmts
-# @else_stmts = else_stmts
+# 	def initialize(condition, blocks, else_condition)
+# 		@condition = condition
+# 		@blocks = blocks
+# 		@else_condition = else_condition
+# 	end
+
+# 	def eval
+# 		incr_scope
+# 		if @condition.eval
+# 			return_val = @blocks.eval
+# 		else
+# 			return_val = @else_condition.eval
+# 		end
+# 		decr_scope
+# 		return return_val
+# 	end
 # end
-# def eval
-# open_scope
-# if @cond.eval
-# return_value = @stmts.eval
-# else
-# return_value = @else_stmts.eval
-# end
-# close_scope
-# return return_value
-# end
+
+# class Else_condition_node
+# 	def initialize(condition, blocks, else_condition)
+# 		@condition = condition
+# 		@blocks = blocks
+# 		@else_condition = else_condition
+# 	end
+	
+# 	def eval
+# 		incr_scope
+# 		if @condition.eval
+# 			return_val = @blocks.eval
+# 		else
+# 			return_val = @else_condition.eval
+# 		end
+# 		decr_scope
+# 		return return_val
+# 	end
 # end
 
 

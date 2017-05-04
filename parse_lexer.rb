@@ -42,7 +42,10 @@ class Lingua
             # match('void') {|m| m} // Implementera rule :returnValues do <--.
             token(/array/) {|m| m}
             token(/char/) {|m| m}
-    
+            token(/if/) {|m| m}
+            token(/elseif/) {|m| m}
+            token(/else/) {|m| m}
+
 
             token(/\d+/){|m| m.to_i }
             token(/\==/) {|m| m} #=/
@@ -80,6 +83,7 @@ class Lingua
                 match(:declaration)
                 match(:assignment) 
                 match(:if_condition)
+                match(:else_condition)
                 match(:output)
                 # match(:input)
                 # match(:loop)
@@ -103,14 +107,42 @@ class Lingua
             rule :output do
                 match('print', '(', :expression, ')', ';') {|_, _, expression, _ | Print_expr.new(expression) }
                 match('print', '(', :varName, ')', ';') {|_, _, varName, _ | Print_expr.new(varName) }
+                match('print', '(',')', ';') {|_, _, _ | Print_expr.new() }
 
             end
+
 
             rule :if_condition do
-                match('if', :bool_expression, '{', :blocks, '}',';') {|_, a, _, b, _,_| If_condition_node.new(a,b)}
+                match('if', :bool_expression, '{', :blocks, '}', :else_condition, ';') {|_, cond, _, stmts, _, _else,_ | Conditions_Node.new(cond,stmts,_else)}
+ 
+                match('if', :bool_expression, '{', :blocks, '}', ';') {|_, cond, _, stmts, _,_| Conditions_Node.new(cond,stmts)}
+            end
+ 
+
+            rule :else_condition do
+                match('elseif', :bool_expression,  '{', :blocks, '}', :else_condition) {|_,  cond,  _, stmts, _, _else | Conditions_Node.new(cond,stmts,_else)}
+ 
+                match('elseif', :bool_expression,  '{', :blocks, '}') {|_,  cond,  _, stmts, _| Conditions_Node.new(cond,stmts)}
+
+                match('else', '{', :blocks, '}') {|_, _, stmts, _| Conditions_Node.new(true,stmts)}
             end
 
-        
+
+
+            # rule :if_condition do
+            #     match('if', :bool_expression, '{', :blocks, '}',';') {|_, a, _, b, _,_| If_condition_node.new(a,b)}
+            #     match('if', :bool_expression, '{', :blocks, '}', 'else', '{', :blocks, '}',';') {|_, a,_, b,_, _, _, c, _, _| If_else_condition_node.new(a, b, c)}
+            #     match('if', :bool_expression, '{', :blocks, '}', :if_else_condition, ';') {|_, a,_, b,_, c,_| If_else_condition_node.new(a, b, c)}
+            #     match('if', :bool_expression, '{', :blocks, '}', :if_else_condition, 'else', '{', :blocks, '}',';') {|_, a,_, b,_, _, _, c, _, _| If_else_condition_node.new(a, b, c)}
+            # end
+
+            # rule :if_else_condition do
+            #     match('elseif', :bool_expression, '{', :blocks, '}') {|_, a, _, b, _| If_condition_node.new(a,b)}
+            #     match('elseif', :bool_expression, '{', :blocks, '}', :if_else_condition) {|_, a, _, b,_,c| If_else_condition_node.new(a, b, c)}
+            # end
+
+             
+      
 
 
             rule :expression do
@@ -247,9 +279,10 @@ class Lingua
 end
 
 
-test = Lingua.new
-test.openFile
-# Lingua.new.lingua
+# test = Lingua.new
+# test.openFile
+
+Lingua.new.lingua
 
 
 
