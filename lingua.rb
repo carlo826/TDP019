@@ -1,1 +1,9 @@
-int i = 0;i = 3;
+
+
+def int hej(int a, int b){
+	print(a);
+};
+
+hej(1,2);
+
+

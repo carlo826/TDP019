@@ -32,22 +32,30 @@ get_input("Pick a number");
 
 
 
-<if-condition> ::= 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
+<if-condition> ::= 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
+| 'if' '(' <bool-expression> ')' '{' <blocks> '}' 'else' '{' <blocks> '}' ';'
 | 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> ';' 
 | 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> 'else' '{' <blocks> '}' ';'
 
-<elseif> ::= 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
+
+
+<elseif> ::= 
+| 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
 | 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' <elseif> ';'
+
+
+
+
+
+
 
 if (1>10){
 	print("det är falsk!");
-};
-elseif (2 > 10){
-	print("också falskt");
-};
+}
 else{
 	print("TRUE");
-}
+};
 
 
 
@@ -62,7 +70,8 @@ def int funktionsNamn(int argument){
 	
 };
 
-<parameters> ::= <datatype> ' ' <varName>
+<parameters> ::= 
+| <datatype> ' ' <varName>
 | <datatype> ' ' <varName> ' ' <parameters>
 
 <argument> ::= <expression> 

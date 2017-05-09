@@ -29,22 +29,23 @@ end
 
 
 
-class Blocks
-	def initialize(blocks, block)
-		@block = block
-		@blocks = blocks
-	end
-	def eval()
-		puts "Blocks eval"
-		return_val = @block.eval
-		if @block.class != Block
-			@blocks.eval
-		else
-			return return_val
-		end
-		return_val = @block.eval
-	end
-end
+# class Blocks
+# 	def initialize(blocks, block)
+# 		@block = block
+# 		@blocks = blocks
+# 	end
+# 	def eval()
+# 		puts "Blocks eval"
+# 		return_val = @blocks.eval
+# 		if @block.class != Block
+# 			@blocks.eval
+# 		else
+# 			return return_val
+# 		end
+# 		return_val = @block.eval
+# 	end
+# end
+
 
 class Block
 	def initialize(expr)
@@ -52,9 +53,25 @@ class Block
 	end
 
 	def eval()
-		return @expr.eval
+		return_value = nil
+ 		for b in @expr
+			return_value = b.eval()
+		end
+		return return_value
+		# return @expr.eval
 	end
 end
+
+
+# class Block
+# 	def initialize(expr)
+# 		@expr = expr
+# 	end
+
+# 	def eval()
+# 		return @expr.eval
+# 	end
+# end
 
 
 class DeclareVar
@@ -120,8 +137,9 @@ class Find_Variable
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
+      	p "get_name"
         p @@global_var
-        return
+        return "false"
         # return @varName
 
     end
@@ -136,6 +154,7 @@ class Find_Variable
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
+        p "eval"
         return
         # return @varName
     end
@@ -268,7 +287,114 @@ class Conditions_Node
 	end
 end
 
+class Def_function_node
+	def initialize(datatype, varName,parameters, blocks)
 
+		@datatype = datatype
+		@varName = varName
+		@parameters = parameters
+		@blocks = blocks
+	end
+
+
+
+	def eval()
+		p "alalalalalal"
+		p @@global_var 
+		p @varName.returnName()
+		if (@varName.get_name() != "false")
+			puts "Function Variable name already exists"
+			return nil
+		else
+			p "else"
+        	@@global_var[@@scope][@varName.returnName()] = ["func", [@datatype, @parameters, @blocks]]
+        	# p "else 2"
+		end
+	end
+	
+
+end
+
+
+# hej(1,2,3)
+
+class Call_function_node
+	def initialize(varName, parameters)
+		@varName = varName
+		@parameters = parameters
+		p "parapapap", @parameters.class
+	end
+
+
+
+
+	def eval()
+		if (@varName.get_name() == "false")
+			puts "No function exists with name #{@varName}"
+			return nil
+
+		elsif (@@global_var[@@scope][@varName.get_name()][0] != "func")
+			puts "#{@varName} is not a function"
+			return nil
+
+		else
+			p "calfunc"
+			p @parameters.size
+			p "length"
+			for i in 0..@parameters.size
+				i = i*2
+				p @parameters[i].class
+				# p @@global_var[@@scope][@varName][1][1][i][0]
+				p "VAAAAAR", @varName.returnName	
+				p @@global_var[@@scope][@varName.returnName][1][1][i][0]
+			end
+		end
+	end
+		
+end
+
+
+	# def int hej(int a, int b, int c)
+
+	# hej(1,2,3)
+	# hejs(1,2,3)
+
+	# {"i"=>["int", 3]}
+# 		e
+
+#         if @expression.class == Find_Variable
+
+#             @@global_var[@@scope][@varName.returnName()] = ["func", @@global_var[@@scope][@expression.get_name()][1]]
+
+#         elsif @expression == nil
+#             @@global_var[@@scope][@varName.returnName()] = [@datatype, nil]
+
+#         else
+#             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
+#         end
+# 	end
+
+# end
+
+
+
+
+
+
+
+
+# class Param_List
+# 		def initialize(parameters)
+# 			@parameters = parameters
+	
+# 		end
+		
+# 		def eval()
+# 			return @parameters
+# 		end
+# 	end
+
+# end
 
 
 

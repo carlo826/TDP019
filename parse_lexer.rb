@@ -71,36 +71,81 @@ class Lingua
 
 
             start :begin do
-                match(:blocks) {|m| m.eval()}
+                match(:blocks) {|m| Block.new(m).eval()}
             end
 
             rule :blocks do
-                match(:blocks, :block){|a, b| Blocks.new(a, b)}
-                match(:block) {|m| Block.new(m)}
+                match(:blocks, :block){|a, b| [a, b].flatten}
+                match(:block) {|m| [m]}
             end
 
             rule :block do
-                match(:declaration)
-                match(:assignment) 
+                match(:declaration,';')
+
+                match(:assignment,';') 
                 match(:if_condition)
                 match(:else_condition)
                 match(:output)
+                match(:def_function)
+                match(:call_function)
                 # match(:input)
                 # match(:loop)
+                #match(:for_loop)
             end
 
+            rule :def_function do
+                match('def',:datatype, :varName, '(',:parameters,')','{',:blocks,'}',';') {|_,datatype, varName, _, parameters,_,_,blocks,_,_| Def_function_node.new(datatype, varName,parameters,blocks)}
+            end
+
+            rule :call_function do
+                match(:varName, '(',:expression_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
+                match(:varName, '(',:varName_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
+
+            end
+
+            rule :expression_list do
+                match(:expression_list,',',:expression){|a,_,b | [a, b].flatten}
+                match(:expression){| a | [a].flatten}
+            end
+
+            rule :varName_list do
+                match(:varName_list,',',:varName){|a,_,b | [a, b].flatten}
+                match(:varName){| a | [a].flatten}
+            end
+
+            rule :parameters do
+                match(:declaration, ',',:parameters) {|a,_, b| [a, b].flatten}
+                match(:expression,',', :parameters) {|a,_, b| [a, b].flatten}
+                match(:declaration) {| a | [a].flatten}
+                match()
+            end
+
+            
+
+
+#             <function> ::= 'def' <datatype> <string-expression>'(' <parameters> ')' '{' <blocks> '}' ';'
+# | def <datatype> <string-expression> '(' ')' '{' <blocks> '}' 
+
+
+# <parameters> ::= 
+# | <datatype> ' ' <varName>
+# | <datatype> ' ' <varName> ' ' <parameters>
+
+
+
+
             rule :declaration do
-                match(:datatype, :varName, '=', :expression,';') {|datatype, varName, _, expression, _| DeclareVar.new(datatype,
+                match(:datatype, :varName, '=', :expression) {|datatype, varName, _, expression| DeclareVar.new(datatype,
                 varName, expression) }
-                match(:datatype, :varName, ';') {|datatype, varName, _| DeclareVar.new(datatype,
+                match(:datatype, :varName) {|datatype, varName| DeclareVar.new(datatype,
                 varName, nil) }
-                match(:datatype, :varName, '=', :varName, ';') {|datatype, varName, _, expression, _| DeclareVar.new(datatype,
+                match(:datatype, :varName, '=', :varName) {|datatype, varName, _, expression| DeclareVar.new(datatype,
                 varName, expression) }
             end
 
             rule :assignment do
-                match(:varName, '=', :expression, ';') {|varName, _, expression, _ | ReaVar.new(varName, expression) }
-                match(:varName, '=', :varName, ';') {|varName, _, expression, _ | ReaVar.new(varName, expression) }
+                match(:varName, '=', :expression) {|varName, _, expression | ReaVar.new(varName, expression) }
+                match(:varName, '=', :varName) {|varName, _, expression | ReaVar.new(varName, expression) }
             end
 
 
@@ -110,6 +155,10 @@ class Lingua
                 match('print', '(',')', ';') {|_, _, _ | Print_expr.new() }
 
             end
+
+            # rule :for_loop do
+            #     match('for', varName, 'in', :list,'{', :block,'}')
+            # end
 
 
             rule :if_condition do
@@ -236,6 +285,7 @@ class Lingua
                 output = str.join
             end
             puts "=> #{@LinguaParser.parse output}"
+            puts @@global_var
         else
             # puts "=> FileError: #{inFile} not found"
         end
@@ -279,10 +329,11 @@ class Lingua
 end
 
 
-# test = Lingua.new
-# test.openFile
+test = Lingua.new
+test.openFile
 
-Lingua.new.lingua
+
+# Lingua.new.lingua
 
 
 
