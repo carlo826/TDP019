@@ -1,9 +1,5 @@
-
-
-def int hej(int a, int b){
-	print(a);
+for(int i = 0; (i < 10); i++){
+	print("aa");
 };
-
-hej(1,2);
-
-
+int i = 1;
+print(i);

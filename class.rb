@@ -9,6 +9,7 @@
 # Global Variables
 @@scope = 0
 @@global_var = [{}]
+@@functions = {}
 @@debug = true;
 
 def incr_scope
@@ -75,8 +76,8 @@ end
 
 
 class DeclareVar
+	attr_accessor :datatype, :varName, :expression
 	def initialize(datatype, varName, expression=nil)
-
 		@datatype = datatype
 		@varName = varName
 		@expression = expression
@@ -87,9 +88,11 @@ class DeclareVar
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
 
         elsif @expression == nil
-            @@global_var[@@scope][@varName.returnName()] = [@datatype, nil]
-
+        	if @datatype == "int"
+            	@@global_var[@@scope][@varName.returnName()] = [@datatype, Integer_node.new(nil)]
+            end
         else
+
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
         end
   
@@ -97,9 +100,10 @@ class DeclareVar
 end
 
 class ReaVar
-	def initialize(varName, expression)
+	def initialize(varName, operator, expression)
 		@varName = varName
 		@expression = expression
+		@operator = operator
 	end
 
     def eval()
@@ -109,7 +113,19 @@ class ReaVar
                     scope[@varName.get_name()][1] = scope[@expression.get_name()][1]
                     return nil
                 else
-                    scope[@varName.get_name()][1] = @expression.eval()
+					if(@operator == '+=')
+						scope[@varName.get_name()][1] = @varName.eval + @expression.eval
+					elsif(@operator == '-=')
+						scope[@varName.get_name()][1] = @varName.eval - @expression.eval
+					elsif(@operator == '++' && @expression == nil)
+						scope[@varName.get_name()][1] = @varName.eval + 1
+					elsif(@operator == '--' && @expression == nil)
+						scope[@varName.get_name()][1] = @varName.eval - 1
+					elsif(@operator == '=')
+						scope[@varName.get_name()][1] = @expression.eval
+					end
+
+                    # scope[@varName.get_name()][1] = instance_eval("#{@varName.eval} #{@operator} #{@expression.eval}")
                     return nil
                 end 
             end
@@ -136,9 +152,9 @@ class Find_Variable
                 # return scope[@varName][1] #.eval()
             end
         end
-        puts "NameError: undefined local variable or method #{@varName} for main:Object"
-      	p "get_name"
-        p @@global_var
+        # puts "no variabel found"
+        # puts "NameError: undefined local variable or method #{@varName} for main:Object"
+      	# p "get_name"
         return "false"
         # return @varName
 
@@ -146,7 +162,6 @@ class Find_Variable
 
 
     def eval
-        p @@global_var
         for scope in @@global_var 
             if scope[@varName]
                 # return @varName #.eval()
@@ -154,7 +169,6 @@ class Find_Variable
             end
         end
         puts "NameError: undefined local variable or method #{@varName} for main:Object"
-        p "eval"
         return
         # return @varName
     end
@@ -170,6 +184,10 @@ class Aritm_node
     end
 
     def eval()
+  #   	p "@a: #{@a} "
+  #   	if (@a.class == Find_Variable) then
+  #   		@a = @a.eval
+		# end
         instance_eval("#{@a.eval} #{@operator} #{@b.eval}")
     end
 end 
@@ -187,7 +205,6 @@ end
 
 class Integer_node
     def initialize(value)
-        puts "integgerrr"
         @value = value
     end
     def eval()
@@ -197,7 +214,7 @@ end
 
 class String_node
     def initialize(value)
-        puts "striiiing_node"
+        # puts "striiiing_node"
         @value = value.tr('"','')
     end
     def eval()
@@ -243,7 +260,16 @@ class Comparison_node
     end
 
     def eval()
-        instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
+
+    	# p @b.class
+    	if(@a.class == Find_Variable && @b.class != Find_Variable)
+    		instance_eval("#{@@global_var[@@scope][@a.get_name()][1]} #{@operator} #{@b.eval}")
+    	elsif(@a.class != Find_Variable && @b.class == Find_Variable)
+    		instance_eval("#{@a.eval} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
+    	elsif(@a.class == Find_Variable && @b.class == Find_Variable)
+    		instance_eval("#{@@global_var[@@scope][@a.get_name()][1]} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
+    	end
+        # instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
     end
 end 
 
@@ -262,6 +288,29 @@ class Print_expr
 		end
 	end
 end
+class For_loop_node
+	def initialize(var, bool, assignment, blocks)
+		@var = var
+		@bool = bool 
+		@assignment = assignment 
+		@blocks = blocks
+	end
+	# for (int i = 0; i < 10; i++)
+
+	def eval
+		incr_scope()
+		@var.eval
+		while @bool.eval do
+			for block in @blocks
+				block.eval
+			end
+			# @blocks.eval
+			@assignment.eval
+		end
+		decr_scope()
+	end
+end
+
 
 class Conditions_Node
 	def initialize(conditional, ifbranch, elsebranch=nil)
@@ -299,15 +348,13 @@ class Def_function_node
 
 
 	def eval()
-		p "alalalalalal"
-		p @@global_var 
-		p @varName.returnName()
+		p "hej"
 		if (@varName.get_name() != "false")
 			puts "Function Variable name already exists"
 			return nil
 		else
-			p "else"
-        	@@global_var[@@scope][@varName.returnName()] = ["func", [@datatype, @parameters, @blocks]]
+			@@functions[@varName.returnName()] = [@datatype, @parameters, @blocks]
+        	# @@global_var[@@scope][@varName.returnName()] = ["func", [@datatype, @parameters, @blocks]]
         	# p "else 2"
 		end
 	end
@@ -322,33 +369,30 @@ class Call_function_node
 	def initialize(varName, parameters)
 		@varName = varName
 		@parameters = parameters
-		p "parapapap", @parameters.class
 	end
 
 
 
 
 	def eval()
-		if (@varName.get_name() == "false")
+		if @@functions[@varName.returnName][1] == nil
+			@@functions[@varName.returnName][2][0].eval
+			return nil
+		end
+		#TODO Implementera felhantering, matcha varje arguments datatyp med datatypen som angavs vid deklaration
+		j = 0;
+		incr_scope()
+		for i in @@functions[@varName.returnName][1]
+			@@global_var[@@scope][i.varName.returnName] = [i.datatype, @parameters[j].eval]
+			j += 1
+		end
+		@@functions[@varName.returnName][2][0].eval
+		return nil
+		if !(@@functions[@varName.returnName()])
 			puts "No function exists with name #{@varName}"
 			return nil
-
-		elsif (@@global_var[@@scope][@varName.get_name()][0] != "func")
-			puts "#{@varName} is not a function"
-			return nil
-
-		else
-			p "calfunc"
-			p @parameters.size
-			p "length"
-			for i in 0..@parameters.size
-				i = i*2
-				p @parameters[i].class
-				# p @@global_var[@@scope][@varName][1][1][i][0]
-				p "VAAAAAR", @varName.returnName	
-				p @@global_var[@@scope][@varName.returnName][1][1][i][0]
-			end
 		end
+
 	end
 		
 end

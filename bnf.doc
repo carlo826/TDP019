@@ -90,7 +90,9 @@ faktor(argument)
 
 
 
-<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'				
+<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'
+
+for (int i; i < len(dm); i = 3)				
 
 
 <varNames> ::= <varName>,<varNames>

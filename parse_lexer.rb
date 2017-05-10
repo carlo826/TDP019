@@ -59,9 +59,13 @@ class Lingua
             token(/\|\|/) {|m| m}
             token(/\&\&/) {|m| m}
             token(/!/) {|m| m}
+            token(/\+\=/) {|m| m}
+            token(/\+\+/) {|m| m}
             token(/\+/) {|m| m}
             token(/\*/) {|m| m}
             token(/\%/) {|m| m}
+            token(/\-\=/){|m| m}
+            token(/\-\-/){|m| m}
             token(/\-/) {|m| m}
             token(/\//) {|m| m}
             token(/\".*\"/){|m| m}
@@ -80,26 +84,29 @@ class Lingua
             end
 
             rule :block do
+                match(:output)
+                match(:for_loop)
                 match(:declaration,';')
-
                 match(:assignment,';') 
                 match(:if_condition)
                 match(:else_condition)
-                match(:output)
                 match(:def_function)
                 match(:call_function)
                 # match(:input)
                 # match(:loop)
-                #match(:for_loop)
             end
 
             rule :def_function do
                 match('def',:datatype, :varName, '(',:parameters,')','{',:blocks,'}',';') {|_,datatype, varName, _, parameters,_,_,blocks,_,_| Def_function_node.new(datatype, varName,parameters,blocks)}
+                match('def',:datatype, :varName, '(', ')','{',:blocks,'}',';') {|_,datatype, varName, _,_,_,blocks,_,_| Def_function_node.new(datatype, varName,nil,blocks)}
+            
             end
 
             rule :call_function do
                 match(:varName, '(',:expression_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
                 match(:varName, '(',:varName_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
+                match(:varName, '(',')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
+
 
             end
 
@@ -117,21 +124,12 @@ class Lingua
                 match(:declaration, ',',:parameters) {|a,_, b| [a, b].flatten}
                 match(:expression,',', :parameters) {|a,_, b| [a, b].flatten}
                 match(:declaration) {| a | [a].flatten}
-                match()
             end
 
-            
 
-
-#             <function> ::= 'def' <datatype> <string-expression>'(' <parameters> ')' '{' <blocks> '}' ';'
-# | def <datatype> <string-expression> '(' ')' '{' <blocks> '}' 
-
-
-# <parameters> ::= 
-# | <datatype> ' ' <varName>
-# | <datatype> ' ' <varName> ' ' <parameters>
-
-
+            rule :for_loop do
+                match('for', '(', :declaration, ';', :bool_expression, ';', :assignment, ')', '{', :blocks, '}', ';'){|_, _, var, _,bool, _, assignment, _, _, blocks,_, _| For_loop_node.new(var, bool, assignment, blocks)}
+            end
 
 
             rule :declaration do
@@ -144,19 +142,32 @@ class Lingua
             end
 
             rule :assignment do
-                match(:varName, '=', :expression) {|varName, _, expression | ReaVar.new(varName, expression) }
+                match(:varName, '=', :expression) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+                match(:varName, '+=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
+                match(:varName, '-=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
+                match(:varName, '--') {|varName, operator | ReaVar.new(varName, operator,nil) }
+                match(:varName, '++') {|varName, operator | ReaVar.new(varName, operator,nil) }
                 match(:varName, '=', :varName) {|varName, _, expression | ReaVar.new(varName, expression) }
+
             end
+
 
 
             rule :output do
                 match('print', '(', :expression, ')', ';') {|_, _, expression, _ | Print_expr.new(expression) }
                 match('print', '(', :varName, ')', ';') {|_, _, varName, _ | Print_expr.new(varName) }
                 match('print', '(',')', ';') {|_, _, _ | Print_expr.new() }
-
             end
+#hantera bara när vi har ints.
 
-            # rule :for_loop do
+
+
+
+# #match('for', '(', :asgn, ';', :expr, ';', :increment, ')', '{', :stmt_list, '}')
+# end
+
+
+            # rule :for_each_loop do
             #     match('for', varName, 'in', :list,'{', :block,'}')
             # end
 
@@ -214,8 +225,14 @@ class Lingua
             end
                 
             rule :aritm_expression do 
+                # match(:varName, '+=', :aritm_expression) {|a,b,c | Aritm_node.new(a,b,c)}
                 match(:aritm_expression, '+', :term){ |a,b,c | Aritm_node.new(a,b,c)}
                 match(:aritm_expression, '-', :term){ |a,b,c | Aritm_node.new(a,b,c)}
+
+
+                # match(:varName, '=', :varName, '-', :aritm_expression) {|varName, _, expression | ReaVar.new(varName, expression) }
+                # match(:varName, '=', :varName, '*', :aritm_expression) {|varName, _, expression | ReaVar.new(varName, expression) }
+                # match(:varName, '=', :varName, '%', :aritm_expression) {|varName, _, expression, _ | ReaVar.new(varName, expression) }
                 match(:term)
             end
 
@@ -236,6 +253,10 @@ class Lingua
             rule :bool_expression do
                 # match(Integer, :comparison_operator, Integer ) {|a, b, c| Comparison.new(a, b, c) }
                 match('(', :aritm_expression, :comparison_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
+                match('(', :varName, :comparison_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
+                match('(', :aritm_expression, :comparison_operator, :varName,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
+                match('(', :varName, :comparison_operator, :varName,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
+
                 # match('(', :bool_expression, :comparison_operator, :bool_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
                 match('(', :bool_expression, :logic_operator, :bool_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
                 # match('(', :aritm_expression, :logic_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
@@ -334,7 +355,7 @@ test.openFile
 
 
 # Lingua.new.lingua
-
+# 
 
 
 # Examples of use
