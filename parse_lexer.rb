@@ -34,12 +34,13 @@ class Lingua
             token(/\]/) {|m| m}
             token(/\[/) {|m| m}
             token(/\d+\.\d+/) {|m| m.to_f}
+            token(/return/) {|m| m}
 
             token(/float/) {|m| m}
             token(/int/) {|m| m}
             token(/string/) {|m| m}
             token(/bool/) {|m|m}
-            # match('void') {|m| m} // Implementera rule :returnValues do <--.
+            #match(/void/) {|m| m} #// Implementera rule :returnValues do <--.
             token(/array/) {|m| m}
             token(/char/) {|m| m}
             token(/if/) {|m| m}
@@ -51,6 +52,7 @@ class Lingua
             token(/\==/) {|m| m} #=/
             token(/<=/) {|m| m} #=/
             token(/>=/) {|m| m} #=/
+            token(/\!/) {|m| m} #=/
             token(/!=/) {|m| m} #=/
             token(/</)  {|m| m} #=/
             token(/\=/)  {|m| m} #=/
@@ -88,10 +90,11 @@ class Lingua
                 match(:for_loop)
                 match(:declaration,';')
                 match(:assignment,';') 
-                match(:if_condition)
                 match(:else_condition)
                 match(:def_function)
+                match(:if_condition)
                 match(:call_function)
+                match(:return,';')
                 # match(:input)
                 # match(:loop)
             end
@@ -105,7 +108,7 @@ class Lingua
             rule :call_function do
                 match(:varName, '(',:expression_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
                 match(:varName, '(',:varName_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
-                match(:varName, '(',')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
+                match(:varName, '(',')',';') {|varName,_,_,_| Call_function_node.new(varName, nil)}
 
 
             end
@@ -157,6 +160,8 @@ class Lingua
                 match('print', '(', :expression, ')', ';') {|_, _, expression, _ | Print_expr.new(expression) }
                 match('print', '(', :varName, ')', ';') {|_, _, varName, _ | Print_expr.new(varName) }
                 match('print', '(',')', ';') {|_, _, _ | Print_expr.new() }
+                #TODO:
+                # print("iteration", 5);
             end
 #hantera bara när vi har ints.
 
@@ -173,18 +178,18 @@ class Lingua
 
 
             rule :if_condition do
-                match('if', :bool_expression, '{', :blocks, '}', :else_condition, ';') {|_, cond, _, stmts, _, _else,_ | Conditions_Node.new(cond,stmts,_else)}
+                match('if', :bool_expression, '{', :blocks, '}', :else_condition, ';') {|_, cond, _, blocks, _, _else,_ | Conditions_Node.new(cond,blocks,_else)}
  
-                match('if', :bool_expression, '{', :blocks, '}', ';') {|_, cond, _, stmts, _,_| Conditions_Node.new(cond,stmts)}
+                match('if', :bool_expression, '{', :blocks, '}', ';') {|_, cond, _, blocks, _,_| Conditions_Node.new(cond,blocks)}
             end
  
 
             rule :else_condition do
-                match('elseif', :bool_expression,  '{', :blocks, '}', :else_condition) {|_,  cond,  _, stmts, _, _else | Conditions_Node.new(cond,stmts,_else)}
+                match('elseif', :bool_expression,  '{', :blocks, '}', :else_condition) {|_,  cond,  _, blocks, _, _else | Conditions_Node.new(cond,blocks,_else)}
  
-                match('elseif', :bool_expression,  '{', :blocks, '}') {|_,  cond,  _, stmts, _| Conditions_Node.new(cond,stmts)}
+                match('elseif', :bool_expression,  '{', :blocks, '}') {|_,  cond,  _, blocks, _| Conditions_Node.new(cond,blocks)}
 
-                match('else', '{', :blocks, '}') {|_, _, stmts, _| Conditions_Node.new(true,stmts)}
+                match('else', '{', :blocks, '}') {|_, _, blocks, _| Conditions_Node.new(true,blocks)}
             end
 
 
@@ -200,9 +205,16 @@ class Lingua
             #     match('elseif', :bool_expression, '{', :blocks, '}') {|_, a, _, b, _| If_condition_node.new(a,b)}
             #     match('elseif', :bool_expression, '{', :blocks, '}', :if_else_condition) {|_, a, _, b,_,c| If_else_condition_node.new(a, b, c)}
             # end
-
              
-      
+			rule :datatype do
+                match('float') {|m| m}
+                match('int') {|m| m}
+                match('string') {|m| m}
+                match('bool') {|m|m}
+                match('array') {|m| m}
+                match('char') {|m| m}
+                #match('void') {|m| m}   #// Implementera rule :returnValues do <--.
+            end
 
 
             rule :expression do
@@ -210,10 +222,11 @@ class Lingua
                 match(:bool_expression)
                 match(:string_expression)
                 match(:char_expression)
+                match(:call_function)
             end
-
             rule :varName do
                 match(/[A-z]+[A-z0-9]*/) {|m| Find_Variable.new(m)}
+                #match(/bool|int|!|([A-z]+[A-z0-9]*)/) {|m| Find_Variable.new(m)}
             end
 
             rule :char_expression do
@@ -262,8 +275,19 @@ class Lingua
                 # match('(', :aritm_expression, :logic_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
                 match('(', 'true',')') { |_,m,_ | Bool_node.new(true)}
                 match('(', 'false',')') { |_,m,_| Bool_node.new(false)}
-                # match(:varName)
+                match(:negation_bool)
             end
+
+            rule :negation_bool do
+            	match('!', :bool_expression) { |_,a| Neg_node.new(a) }
+            end
+
+            rule :return do
+				match('return', :expression) {|_, expr| ReturnNode.new(expr)}
+				match('return', :varName) {|_, varName| ReturnNode.new(varName)}
+				match('return') {ReturnNode.new()}
+			end
+
             rule :logic_operator do
                 match('&&') {|m| m }
                 match('||') {|m| m }
@@ -278,15 +302,7 @@ class Lingua
                 match('<')  {|m| m }
                 match('<=') {|m| m }
             end
-            rule :datatype do
-                match('float') {|m| m}
-                match('int') {|m| m}
-                match('string') {|m| m}
-                match('bool') {|m|m}
-                # match('void') {|m| m} // Implementera rule :returnValues do <--.
-                match('array') {|m| m}
-                match('char') {|m| m}
-            end
+
        
             
 
@@ -306,7 +322,7 @@ class Lingua
                 output = str.join
             end
             puts "=> #{@LinguaParser.parse output}"
-            puts @@global_var
+            p @@global_var
         else
             # puts "=> FileError: #{inFile} not found"
         end
@@ -354,7 +370,7 @@ test = Lingua.new
 test.openFile
 
 
-# Lingua.new.lingua
+#Lingua.new.lingua
 # 
 
 

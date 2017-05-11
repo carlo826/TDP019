@@ -92,7 +92,8 @@ class DeclareVar
             	@@global_var[@@scope][@varName.returnName()] = [@datatype, Integer_node.new(nil)]
             end
         else
-
+        	puts "eval function plz"
+        	p @expression
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
         end
   
@@ -249,6 +250,15 @@ class Bool_node
   end
 end
 
+class Neg_node
+	def initialize(bool_expr)
+		@bool_expr = bool_expr
+	end
+		def eval
+		return (not @bool_expr.eval)
+	end
+end
+
 
 class Comparison_node
     attr_accessor :a, :operator, :b
@@ -268,8 +278,9 @@ class Comparison_node
     		instance_eval("#{@a.eval} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
     	elsif(@a.class == Find_Variable && @b.class == Find_Variable)
     		instance_eval("#{@@global_var[@@scope][@a.get_name()][1]} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
+    	else
+        	instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
     	end
-        # instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
     end
 end 
 
@@ -326,7 +337,10 @@ class Conditions_Node
 			conditional = @conditional.eval()
 		end
 		if (conditional)
-			return_value = @ifbranch.eval()
+			for condition in @ifbranch
+				condition.eval
+			end
+			#return_value = @ifbranch.eval()
 		else
 			if (@elsebranch != nil)
 				return_value = @elsebranch.eval()
@@ -348,7 +362,6 @@ class Def_function_node
 
 
 	def eval()
-		p "hej"
 		if (@varName.get_name() != "false")
 			puts "Function Variable name already exists"
 			return nil
@@ -358,8 +371,6 @@ class Def_function_node
         	# p "else 2"
 		end
 	end
-	
-
 end
 
 
@@ -376,17 +387,32 @@ class Call_function_node
 
 	def eval()
 		if @@functions[@varName.returnName][1] == nil
-			@@functions[@varName.returnName][2][0].eval
+			puts "no parameters"
+			#puts "global var #{@@global_var}"
+			#p @@functions[@varName.returnName][2][0].eval
+			#@@functions[@varName.returnName][2][1].eval
+			incr_scope()
+			for i in p @@functions[@varName.returnName][2]
+				if i.class == ReturnNode
+					return i.eval
+				else
+					i.eval
+				end
+			end
+			decr_scope
 			return nil
 		end
 		#TODO Implementera felhantering, matcha varje arguments datatyp med datatypen som angavs vid deklaration
 		j = 0;
 		incr_scope()
 		for i in @@functions[@varName.returnName][1]
+
 			@@global_var[@@scope][i.varName.returnName] = [i.datatype, @parameters[j].eval]
 			j += 1
 		end
+
 		@@functions[@varName.returnName][2][0].eval
+		decr_scope
 		return nil
 		if !(@@functions[@varName.returnName()])
 			puts "No function exists with name #{@varName}"
@@ -396,6 +422,60 @@ class Call_function_node
 	end
 		
 end
+
+class ReturnNode
+	def initialize(returnExpr=nil)
+		@returnExpr = returnExpr
+	end
+
+	def eval
+		p "jing yangjing"
+
+		if(@returnExpr != nil)
+			if @returnExpr.class == Find_Variable && @returnExpr.get_name != "false"
+				return @returnExpr.eval
+			elsif @returnExpr.class != Find_Variable
+				# puts @returnExpr.eval()
+				return @returnExpr.eval()
+			else
+				puts "No variable exists with name #{@returnExpr} in this scope"
+			end
+		else
+			@return_value = []
+		end
+		# puts @returnExpr
+		return @returnExpr
+	end
+end
+
+
+# class ReturnNode
+# 	def initialize(returnExpr=nil)
+# 		@returnExpr = returnExpr
+# 		@return_value = nil
+# 	end
+# 	def get_value
+# 		return @return_value
+# 	end
+# 	def eval
+# 		p "jing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yangjing yang"
+# 		if(@returnExpr != nil)
+# 			if @returnExpr.class == Find_Variable && @returnExpr.get_name != "false"
+# 				return @returnExpr.eval
+# 			elsif @returnExpr.class != Find_Variable
+# 				@return_value = 
+# 				puts @returnExpr.eval()
+# 				return @returnExpr.eval()
+# 			else
+# 				puts "No variable exists with name #{@returnExpr} in this scope"
+# 			end
+# 		else
+# 			@return_value = []
+# 		end
+# 		puts @return_value
+# 		return @return_value
+# 	end
+# end
 
 
 	# def int hej(int a, int b, int c)

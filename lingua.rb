@@ -1,5 +1,12 @@
-for(int i = 0; (i < 10); i++){
-	print("aa");
+
+
+def int funktion(){
+	
+
+	int i = 0;
+	return i;
 };
-int i = 1;
-print(i);
+
+
+int i = funktion();;
+i = 3;
