@@ -99,6 +99,20 @@ class Lingua
                 # match(:loop)
             end
 
+            #################TODO
+            # Skriva testfall
+            # Fixa felhantering
+            # for i in array loop.
+            # while loop
+            # Fixa namn på vissa saker (inte prio)
+            # fixa "; syntaxen"
+            # Arrayers
+            # Hashtabeller
+            # Fler datatyper?
+            # Input från terminalen.
+            # Fixa så man kan skriva: print("iteration", 5);
+
+
             rule :def_function do
                 match('def',:datatype, :varName, '(',:parameters,')','{',:blocks,'}',';') {|_,datatype, varName, _, parameters,_,_,blocks,_,_| Def_function_node.new(datatype, varName,parameters,blocks)}
                 match('def',:datatype, :varName, '(', ')','{',:blocks,'}',';') {|_,datatype, varName, _,_,_,blocks,_,_| Def_function_node.new(datatype, varName,nil,blocks)}
