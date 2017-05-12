@@ -15,13 +15,13 @@
 def incr_scope
 	@@global_var << {} #index symbolizes scope
 	@@scope += 1
-	puts "Incrementing scope with 1 \n Scope count: #{@@scope}" if @@debug
+	# puts "Incrementing scope with 1 \n Scope count: #{@@scope}" if @@debug
 end
 
 def decr_scope
 	@@global_var.pop
 	@@scope -= 1
-	puts "Decrementing scope with -1 \n Scope count: #{@@scope}"
+	# puts "Decrementing scope with -1 \n Scope count: #{@@scope}"
 	if @@scope < 0
 		raise("You cannot close base scope!")
 	end
@@ -83,18 +83,22 @@ class DeclareVar
 		@expression = expression
 	end
 	def eval()
-
         if @expression.class == Find_Variable
-            @@global_var[@@scope][@varName.returnName()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+        	if @expression.in_scope == true
+            	@@global_var[@@scope][@varName.returnName()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+            	return
+            end
 
         elsif @expression == nil
         	if @datatype == "int"
             	@@global_var[@@scope][@varName.returnName()] = [@datatype, Integer_node.new(nil)]
             end
         else
-        	puts "eval function plz"
-        	p @expression
+        	# puts "eval function plz"
+        	# puts "scope", @@scope
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
+        	# p "globals", @@global_var
+
         end
   
 	end
@@ -108,42 +112,90 @@ class ReaVar
 	end
 
     def eval()
-        for scope in @@global_var #.reverse()?
-            if scope[@varName.get_name()]
-                if @expression.class == Find_Variable
-                    scope[@varName.get_name()][1] = scope[@expression.get_name()][1]
-                    return nil
-                else
-					if(@operator == '+=')
-						scope[@varName.get_name()][1] = @varName.eval + @expression.eval
-					elsif(@operator == '-=')
-						scope[@varName.get_name()][1] = @varName.eval - @expression.eval
-					elsif(@operator == '++' && @expression == nil)
-						scope[@varName.get_name()][1] = @varName.eval + 1
-					elsif(@operator == '--' && @expression == nil)
-						scope[@varName.get_name()][1] = @varName.eval - 1
-					elsif(@operator == '=')
-						scope[@varName.get_name()][1] = @expression.eval
-					end
+    	p "EVALLL", @@global_var[@@scope][@varName.varName][1]
+    	if @expression.class == Find_Variable && @expression.in_scope == true && @varName.in_scope == true
+    		if @operator == '='
+    			@@global_var[@@scope][@varName.varName][1] = @expression.eval#[@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+    		elsif @operator == '-='
+    			@@global_var[@@scope][@varName.varName][1] = @varName.eval - @expression.eval
+    		elsif @operator == '+='
+    			@@global_var[@@scope][@varName.varName][1] = @varName.eval + @expression.eval
+    		end
 
-                    # scope[@varName.get_name()][1] = instance_eval("#{@varName.eval} #{@operator} #{@expression.eval}")
-                    return nil
-                end 
-            end
-        end
-        puts "Variabel Error: No variable found with name #{@varName}!"
-        return nil 
+    	elsif @expression == nil && @varName.in_scope == true
+    		if @@global_var[@@scope][@varName.varName][1].eval != nil 
+    			## Måste fixa ovanför. .eval vs inte .eval.
+				if @operator == '++'
+					@@global_var[@@scope][@varName.varName][1] = @varName.eval + 1
+				elsif @operator == '--'
+					@@global_var[@@scope][@varName.varName][1] = @varName.eval - 1
+				end
+			else
+				puts "NoMethodError: undefined method `+' for nil:NilClass"
+				return
+			end
+		
+
+    	elsif @varName.in_scope == true
+	    	if @operator == '+='
+	    		@@global_var[@@scope][@varName.varName][1] = @varName.eval + @expression.eval
+	    	elsif @operator == '-='
+	    		@@global_var[@@scope][@varName.varName][1] = @varName.eval - @expression.eval
+	    	elsif @operator == '='
+	    		@@global_var[@@scope][@varName.varName][1] =  @expression.eval
+
+	    		# @@global_var[@@scope][@varName.varName][1] = instance_eval("#{@varName.eval} #{@operator} #{@expression.eval}")
+	    		p @@global_var
+	    	end
+    	end
+
+     #    for scope in @@global_var #.reverse()?
+     #        if scope[@varName.get_name()]
+     #            if @expression.class == Find_Variable
+     #                scope[@varName.get_name()][1] = scope[@expression.get_name()][1]
+     #                return nil
+     #            else
+					# if(@operator == '+=')
+					# 	scope[@varName.get_name()][1] = @varName.eval + @expression.eval
+					# elsif(@operator == '-=')
+					# 	scope[@varName.get_name()][1] = @varName.eval - @expression.eval
+					# elsif(@operator == '++' && @expression == nil)
+					# 	scope[@varName.get_name()][1] = @varName.eval + 1
+					# elsif(@operator == '--' && @expression == nil)
+					# 	scope[@varName.get_name()][1] = @varName.eval - 1
+					# elsif(@operator == '=')
+					# 	scope[@varName.get_name()][1] = @expression.eval
+					# end
+
+     #                # scope[@varName.get_name()][1] = instance_eval("#{@varName.eval} #{@operator} #{@expression.eval}")
+     #                return nil
+     #            end 
+
+     #    puts "Variabel Error: No variable found with name #{@varName}!"
+     #    return nil 
+
     end
 end
 
 
 class Find_Variable
+	attr_accessor :varName
     def initialize(varName)
         @varName = varName
     end
 
-    def returnName
+    def returnName #gör om till accessor
     	@varName
+    end
+
+    def in_scope
+    	if @@global_var[@@scope][@varName]
+    		return true
+    	else
+    		puts "'#{@varName}': undefined local variable or method '#{@varName}' for main:Object (NameError) }"
+    		# puts "NameError: undefined local variable or method #{@varName} for main:Object"
+    		return false
+        end
     end
 
     def get_name
@@ -272,11 +324,11 @@ class Comparison_node
     def eval()
 
     	# p @b.class
-    	if(@a.class == Find_Variable && @b.class != Find_Variable)
+    	if(@a.class == Find_Variable && @b.class != Find_Variable && @a.in_scope == true)
     		instance_eval("#{@@global_var[@@scope][@a.get_name()][1]} #{@operator} #{@b.eval}")
-    	elsif(@a.class != Find_Variable && @b.class == Find_Variable)
+    	elsif(@a.class != Find_Variable && @b.class == Find_Variable && @b.in_scope == true)
     		instance_eval("#{@a.eval} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
-    	elsif(@a.class == Find_Variable && @b.class == Find_Variable)
+    	elsif(@a.class == Find_Variable && @b.class == Find_Variable && @a.in_scope == true && @b.in_scope == true)
     		instance_eval("#{@@global_var[@@scope][@a.get_name()][1]} #{@operator} #{@@global_var[@@scope][@b.get_name()][1]}")
     	else
         	instance_eval("#{@a.eval} #{@operator} #{@b.eval}") 
@@ -291,11 +343,22 @@ class Print_expr
 	end
 	def eval
 		if (@expr != nil)
-			printer = @expr.eval
-			puts printer
-			return printer
+			# p "expprrrrr", @expr
+			if @expr.class == Find_Variable && @expr.in_scope == true
+				# if @@global_var[@@scope][@expr.returnName]
+			# if @expr.class == Find_Variable && @ep
+					puts "vairable in scope"
+					puts @expr.eval
+					return @expr.eval
+			else
+				printer = @expr.eval
+				puts printer
+				return printer
+			end
 		else
 			puts "No input for print"
+			return "nil"
+			return nil
 		end
 	end
 end
@@ -313,7 +376,11 @@ class For_loop_node
 		@var.eval
 		while @bool.eval do
 			for block in @blocks
-				block.eval
+				if block.class == ReturnNode
+					return block.eval
+				else
+					block.eval
+				end
 			end
 			# @blocks.eval
 			@assignment.eval
@@ -321,6 +388,32 @@ class For_loop_node
 		decr_scope()
 	end
 end
+
+
+class While_loop_node
+	def initialize(bool_expr, blocks)
+		@bool_expr = bool_expr
+		@blocks = blocks
+	end
+	def eval
+		incr_scope()
+		while @bool_expr.eval do
+		#puts "Class: #{@stmts}"
+		#puts "V: #{@@variables}"
+		# @blocks.eval
+			for block in @blocks
+				if block.class == ReturnNode
+					return block.eval
+				else
+					block.eval
+				end
+			# p @blocks
+			end
+		end
+		decr_scope()
+	end
+end
+
 
 
 class Conditions_Node
@@ -432,19 +525,20 @@ class ReturnNode
 		p "jing yangjing"
 
 		if(@returnExpr != nil)
-			if @returnExpr.class == Find_Variable && @returnExpr.get_name != "false"
+			if @returnExpr.class == Find_Variable && @returnExpr.in_scope == true
 				return @returnExpr.eval
 			elsif @returnExpr.class != Find_Variable
 				# puts @returnExpr.eval()
 				return @returnExpr.eval()
-			else
-				puts "No variable exists with name #{@returnExpr} in this scope"
 			end
-		else
-			@return_value = []
+			# else
+			# 	puts "No variable exists with name #{@returnExpr} in this scope"
+			# end
+		# else
+		# 	@return_value = []
 		end
 		# puts @returnExpr
-		return @returnExpr
+		# return @returnExpr
 	end
 end
 

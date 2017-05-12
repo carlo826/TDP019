@@ -88,6 +88,7 @@ class Lingua
             rule :block do
                 match(:output)
                 match(:for_loop)
+                match(:while_loop)
                 match(:declaration,';')
                 match(:assignment,';') 
                 match(:else_condition)
@@ -100,6 +101,10 @@ class Lingua
             end
 
             #################TODO
+            #if(x == 20 || x == 30)
+            #if(x==20|30)
+            # fixa @returnExpr.get_name != "false"
+            #variabler och globala variabler lol", globala variabler är 
             # Skriva testfall
             # Fixa felhantering
             # for i in array loop.
@@ -148,23 +153,33 @@ class Lingua
                 match('for', '(', :declaration, ';', :bool_expression, ';', :assignment, ')', '{', :blocks, '}', ';'){|_, _, var, _,bool, _, assignment, _, _, blocks,_, _| For_loop_node.new(var, bool, assignment, blocks)}
             end
 
+            rule :while_loop do
+                match('while', '(', :bool_expression, ')', '{', :blocks, '}', ';'){|_, _, bool_expr, _, _, blocks, _,_| While_loop_node.new(bool_expr, blocks) }
+            end
+
+
 
             rule :declaration do
+                match(:datatype, :varName, '=', :varName) {|datatype, varName, _, expression| DeclareVar.new(datatype,
+                varName, expression) }
                 match(:datatype, :varName, '=', :expression) {|datatype, varName, _, expression| DeclareVar.new(datatype,
                 varName, expression) }
                 match(:datatype, :varName) {|datatype, varName| DeclareVar.new(datatype,
                 varName, nil) }
-                match(:datatype, :varName, '=', :varName) {|datatype, varName, _, expression| DeclareVar.new(datatype,
-                varName, expression) }
             end
 
             rule :assignment do
+                match(:varName, '=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+                match(:varName, '+=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+                match(:varName, '-=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+                match(:varName, '++', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+                match(:varName, '--', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
+
                 match(:varName, '=', :expression) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
                 match(:varName, '+=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
                 match(:varName, '-=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
                 match(:varName, '--') {|varName, operator | ReaVar.new(varName, operator,nil) }
                 match(:varName, '++') {|varName, operator | ReaVar.new(varName, operator,nil) }
-                match(:varName, '=', :varName) {|varName, _, expression | ReaVar.new(varName, expression) }
 
             end
 
@@ -306,6 +321,10 @@ class Lingua
                 match('&&') {|m| m }
                 match('||') {|m| m }
                 match('!') {|m| m }
+
+            # if ((3 == 3) || (3 == 4)){
+            #     print("hej");
+            # };
             end
             
             rule :comparison_operator do
@@ -384,7 +403,7 @@ test = Lingua.new
 test.openFile
 
 
-#Lingua.new.lingua
+# Lingua.new.lingua
 # 
 
 
