@@ -9,12 +9,19 @@
 # Global Variables
 @@scope = 0
 @@global_var = [{}]
+@@all_globals = {}
 @@functions = {}
 @@debug = true;
 
 def incr_scope
 	@@global_var << {} #index symbolizes scope
 	@@scope += 1
+	for g in @@all_globals
+		p "lägger till lokala scopet"
+
+		@@global_var[@@scope][g[0]] = [g[1][0],g[1][1] ]
+		@@global_var
+	end
 	# puts "Incrementing scope with 1 \n Scope count: #{@@scope}" if @@debug
 end
 
@@ -76,26 +83,44 @@ end
 
 
 class DeclareVar
-	attr_accessor :datatype, :varName, :expression
-	def initialize(datatype, varName, expression=nil)
+	attr_accessor :datatype, :varName, :expression, :global
+	def initialize(datatype, varName, expression=nil, global = false)
 		@datatype = datatype
 		@varName = varName
 		@expression = expression
+		@global = global
 	end
 	def eval()
-        if @expression.class == Find_Variable
+		if @global == true
+			if @expression.class == Find_Variable && @expression.in_scope == true
+				@@all_globals[@varName] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+				@@global_var[@@scope][@varName.varName] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+
+			elsif @expression == nil
+	        	if @datatype == "int"
+	            	@@all_globals[@@scope][@varName.varName] = [@datatype, Integer_node.new(nil)]
+	            	@@global_var[@@scope][@varName.varName] = [@datatype, Integer_node.new(nil)]
+	            end
+			else
+				p "lägger till en global var till all globals"
+				@@all_globals[@varName.varName] = [@datatype, @expression.eval]
+				@@global_var[@@scope][@varName.varName] = [@datatype, @expression.eval]
+			end
+
+        elsif @expression.class == Find_Variable
         	if @expression.in_scope == true
-            	@@global_var[@@scope][@varName.returnName()] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
+            	@@global_var[@@scope][@varName.varName] = [@datatype, @@global_var[@@scope][@expression.get_name()][1]]
             	return
             end
 
         elsif @expression == nil
         	if @datatype == "int"
-            	@@global_var[@@scope][@varName.returnName()] = [@datatype, Integer_node.new(nil)]
+            	@@global_var[@@scope][@varName.varName] = [@datatype, Integer_node.new(nil)]
             end
         else
         	# puts "eval function plz"
         	# puts "scope", @@scope
+        	p "lokal"
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
         	# p "globals", @@global_var
 
@@ -122,20 +147,15 @@ class ReaVar
     			@@global_var[@@scope][@varName.varName][1] = @varName.eval + @expression.eval
     		end
 
-    	elsif @expression == nil && @varName.in_scope == true
-    		if @@global_var[@@scope][@varName.varName][1].eval != nil 
-    			## Måste fixa ovanför. .eval vs inte .eval.
-				if @operator == '++'
-					@@global_var[@@scope][@varName.varName][1] = @varName.eval + 1
-				elsif @operator == '--'
-					@@global_var[@@scope][@varName.varName][1] = @varName.eval - 1
-				end
+    	elsif @expression == nil && @varName.in_scope == true && @@global_var[@@scope][@varName.varName][1].class == Fixnum
+			if @operator == '++'
+				@@global_var[@@scope][@varName.varName][1] = @varName.eval + 1
+			elsif @operator == '--'
+				@@global_var[@@scope][@varName.varName][1] = @varName.eval - 1
 			else
-				puts "NoMethodError: undefined method `+' for nil:NilClass"
+				throw "NoMethodError: undefined method #{@operator} for nil:NilClass"
 				return
 			end
-		
-
     	elsif @varName.in_scope == true
 	    	if @operator == '+='
 	    		@@global_var[@@scope][@varName.varName][1] = @varName.eval + @expression.eval
@@ -343,20 +363,22 @@ class Print_expr
 	end
 	def eval
 		if (@expr != nil)
-			# p "expprrrrr", @expr
-			if @expr.class == Find_Variable && @expr.in_scope == true
-				# if @@global_var[@@scope][@expr.returnName]
-			# if @expr.class == Find_Variable && @ep
-					puts "vairable in scope"
-					puts @expr.eval
-					return @expr.eval
-			else
+			if @expr.class != Find_Variable
+
 				printer = @expr.eval
 				puts printer
 				return printer
+			# p "expprrrrr", @expr
+			elsif @expr.class == Find_Variable && @expr.in_scope == true
+				# if @@global_var[@@scope][@expr.returnName]
+			# if @expr.class == Find_Variable && @ep
+				puts "vairable in scope"
+				puts @expr.eval
 			end
+
 		else
 			puts "No input for print"
+					return @expr.eval
 			return "nil"
 			return nil
 		end

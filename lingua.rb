@@ -2,7 +2,6 @@
 
 
 
+@ int i = 3;
 
-int i;
-
-i++;
+print(i);

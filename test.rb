@@ -3,14 +3,19 @@
 a = {"a" => 1, "b" => 2}
 
 
-if a["c"] == nil
-	p "hej"
-end
-i = 1337
+# if a["c"] == nil
+# 	p "hej"
+# end
+a = {"i" => ["int", 5]}
+
+for i in a
+	puts
+	p i[1][0]
+end 
 
 def func
 
-	puts "puts i #{i}"
+	
 
 end
 

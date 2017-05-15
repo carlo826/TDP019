@@ -47,7 +47,7 @@ class Lingua
             token(/elseif/) {|m| m}
             token(/else/) {|m| m}
 
-
+            token(/@/) { |m| m}
             token(/\d+/){|m| m.to_i }
             token(/\==/) {|m| m} #=/
             token(/<=/) {|m| m} #=/
@@ -100,15 +100,17 @@ class Lingua
                 # match(:loop)
             end
 
+        
+
             #################TODO
             #if(x == 20 || x == 30)
             #if(x==20|30)
-            # fixa @returnExpr.get_name != "false"
+            # fixa @returnExpr.get_name != "false"        /check
             #variabler och globala variabler lol", globala variabler är 
             # Skriva testfall
-            # Fixa felhantering
-            # for i in array loop.
-            # while loop
+            # Fixa felhantering 
+            # for i in array loop.    /check
+            # while loop             /check
             # Fixa namn på vissa saker (inte prio)
             # fixa "; syntaxen"
             # Arrayers
@@ -166,6 +168,14 @@ class Lingua
                 varName, expression) }
                 match(:datatype, :varName) {|datatype, varName| DeclareVar.new(datatype,
                 varName, nil) }
+
+
+                match('@', :datatype, :varName, '=', :expression) {|_,datatype, varName, _, expression| DeclareVar.new(datatype,
+                varName, expression, true) }
+                match('@', :datatype, :varName, '=', :varName) {|_,datatype, varName, _, expression| DeclareVar.new(datatype,
+                varName, expression, true) }
+                match('@', :datatype, :varName) {|_,datatype, varName| DeclareVar.new(datatype,
+                varName, nil, true) }
             end
 
             rule :assignment do
