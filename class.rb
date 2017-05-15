@@ -35,26 +35,6 @@ def decr_scope
 end
 
 
-
-
-# class Blocks
-# 	def initialize(blocks, block)
-# 		@block = block
-# 		@blocks = blocks
-# 	end
-# 	def eval()
-# 		puts "Blocks eval"
-# 		return_val = @blocks.eval
-# 		if @block.class != Block
-# 			@blocks.eval
-# 		else
-# 			return return_val
-# 		end
-# 		return_val = @block.eval
-# 	end
-# end
-
-
 class Block
 	def initialize(expr)
 		@expr = expr
@@ -69,18 +49,6 @@ class Block
 		# return @expr.eval
 	end
 end
-
-
-# class Block
-# 	def initialize(expr)
-# 		@expr = expr
-# 	end
-
-# 	def eval()
-# 		return @expr.eval
-# 	end
-# end
-
 
 class DeclareVar
 	attr_accessor :datatype, :varName, :expression, :global
@@ -120,7 +88,6 @@ class DeclareVar
         else
         	# puts "eval function plz"
         	# puts "scope", @@scope
-        	p "lokal"
             @@global_var[@@scope][@varName.returnName()] = [@datatype, @expression.eval()]
         	# p "globals", @@global_var
 
@@ -266,6 +233,14 @@ class Aritm_node
 end 
 
 
+class Array_node
+	def initialize(expr_list)
+		@expr_list = expr_list
+	end
+	def eval()
+		return @expr_list
+	end
+end
 
 class Float_node
     def initialize(value)
@@ -364,16 +339,25 @@ class Print_expr
 	def eval
 		if (@expr != nil)
 			if @expr.class != Find_Variable
-
-				printer = @expr.eval
-				puts printer
-				return printer
+				puts @expr.eval
+				return @expr.eval
 			# p "expprrrrr", @expr
 			elsif @expr.class == Find_Variable && @expr.in_scope == true
+				if (@@global_var[@@scope][@expr.get_name][0] == "array")
+					printer = "["
+					for i in @@global_var[@@scope][@expr.get_name][1]
+						printer << "#{i.eval},"
+					end
+					printer = printer[0...-1]
+					printer << "]"
+					p "Printing array content"
+					puts printer
+					return printer
 				# if @@global_var[@@scope][@expr.returnName]
 			# if @expr.class == Find_Variable && @ep
-				puts "vairable in scope"
-				puts @expr.eval
+				else
+					puts @expr.eval
+				end
 			end
 
 		else
@@ -408,6 +392,48 @@ class For_loop_node
 			@assignment.eval
 		end
 		decr_scope()
+	end
+end
+
+class For_each_loop_node
+	def initialize(var, iterable, blocks)
+		@var = var
+		@iterable = iterable
+		@blocks = blocks 
+	end
+	# for (int i = 0; i < 10; i++)
+
+	def eval
+		# p @@global_var
+		# p "for each eval"
+		# p @var
+		# p @iterable
+		# p @@global_var[@@scope][@var.returnName]
+		# p @@global_var[@@scope][@iterable.returnName][1]
+		# p "test"
+		# p @iterable
+
+		@@global_var[@@scope][@var.returnName] = ['int',nil,'temp']
+
+		if(@iterable.class == Find_Variable)
+			for i in @@global_var[@@scope][@iterable.returnName][1]
+				# p "i"
+				# p i
+				@@global_var[@@scope][@var.returnName][1] = i.eval
+				for block in @blocks
+					block.eval
+				end
+			end
+	    elsif(@iterable.class == Array_node)
+	    	for i in @iterable.eval
+				@@global_var[@@scope][@var.returnName][1] = i.eval
+				for block in @blocks
+					block.eval
+				end
+			end
+		end
+		# @@global_var.remove(@@global_var[@@scope][@var.returnName])
+		#TODO : ta bort variablen från global vars
 	end
 end
 
@@ -497,9 +523,6 @@ class Call_function_node
 		@parameters = parameters
 	end
 
-
-
-
 	def eval()
 		if @@functions[@varName.returnName][1] == nil
 			puts "no parameters"
@@ -544,8 +567,6 @@ class ReturnNode
 	end
 
 	def eval
-		p "jing yangjing"
-
 		if(@returnExpr != nil)
 			if @returnExpr.class == Find_Variable && @returnExpr.in_scope == true
 				return @returnExpr.eval

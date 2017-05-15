@@ -1,167 +1,162 @@
+<begin> ::=
+|<blocks>
 
-<blocks> ::= <block>,<blocks> 
+<blocks> ::= 
+|<block>,<blocks> 
 | <block>
 
 <block> ::= 
+| <output>
+| <for_loop>
+| <for_each_loop>
+| <while_loop>
 | <declaration>
-| <assignment> 
-| <output> 
-| <input> 
-| <condition> 
-| <loop>
+| <assignment>
+| <else_condition>
+| <def_function>
+| <if_condition>
+| <call_function>
+| <return>
 
-<declaration> :: = <datatype> ' ' <varName> '=' <expression> ';'
-| <datatype> ' ' <varName> ';'
+<declaration> :: = 
+|<datatype> ' ' <varName> '=' <expression> ';'
+|<datatype> ' ' <varName> '=' <varName> ';'
+|<datatype> ' ' <varName> ';'
+|'@' <datatype> ' ' <varName> '=' <expression> ';'
+|'@' <datatype> ' ' <varName> '=' <varName> ';'
+|'@' <datatype> ' ' <varName> ';'
 
-<assignment> ::= <varName> '=' <expression> ';'
+<assignment> ::= 
+|<varName> '=' <varName> ';'
+|<varName> '+=' <varName> ';'
+|<varName> '-=' <varName> ';'
+|<varName> '=' <expression> ';'
+|<varName> '+=' <artim_expression> ';'
+|<varName> '=' <artim_expression> ';'
+|<varName> '--' ';'
+|<varName> '++' ';'
 
-
-
-<output> ::= 'print' '(' <expression> ')' ';' 
-| 'print' '(' <varName> ')' ';'
-
-print("string");
-
-<input> ::= 'get_input' '(' <string-expression> ')' ';'
-
-get_input("Pick a number");
-
-
-
-
-
-
-
-<if-condition> ::= 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' ';' 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' 'else' '{' <blocks> '}' ';'
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> ';' 
-| 'if' '(' <bool-expression> ')' '{' <blocks> '}' '<elseif> 'else' '{' <blocks> '}' ';'
+<output> ::= 
+|'print' '(' <expression> ')' ';' 
+|'print' '(' <varName> ')' ';'
+|'print' '(' ')' ';'
 
 
+<if_condition> ::= 
+| 'if' '(' <bool_expression> ')' '{' <blocks> '}' ';' 
+| 'if' '(' <bool_expression> ')' '{' <blocks> '}' <else_condition> ';'
 
-<elseif> ::= 
-| 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' ';'
-| 'elseif' '(' <bool-expression> ')' '{' <blocks> '}' <elseif> ';'
-
-
-
-
-
+<else_condition> ::= 
+| 'elseif' <bool_expression> '{' <blocks> '}' <else_condition> ';'
+| 'elseif' <bool_expression> '{' <blocks> '}' ';'
 
 
-if (1>10){
-	print("det är falsk!");
-}
-else{
-	print("TRUE");
-};
+<def_function> ::= 
+|'def' <datatype> <varName>'(' <parameters> ')' '{' <blocks> '}' ';'
+| def <datatype> <string_expression> '(' <parameters> ')' '{' '}' ';'
+| def <datatype> <string_expression> '(' ')' '{' <blocks> '}' ';'
+| def <datatype> <string_expression> '(' ')' '{' '}' ';'
 
-
-
-
-
-
-
-<function> ::= 'def' <datatype> <string-expression>'(' <parameters> ')' '{' <blocks> '}' ';'
-| def <datatype> <string-expression> '(' ')' '{' <blocks> '}' ';'
-
-def int funktionsNamn(int argument){
-	
-};
+<call_function> ::= 
+| <varName> '(' <expression_list> ')'
+| <varName> '(' <expression_list> ')'
+| <varName> '(' ')'
 
 <parameters> ::= 
-| <datatype> ' ' <varName>
-| <datatype> ' ' <varName> ' ' <parameters>
-
-<argument> ::= <expression> 
-| <varName>
+| <declaration> ',' <parameters>
+| <expression> ',' <parameters>
+| <declaration>
 
 
-<function-call> ::= <string-expression> '(' ')'
-| <string-expression> '(' <expression> ')'
+<for_loop> ::= 
+|'for' '(' <declaration> ';' <bool_expression> ';' <assignment> ')' '{' <blocks> '}' ';'
 
+<for_each_loop> ::=
+|'for_each' '(' <varName> ',' <varName> ')' '{' <blocks> '}' ';'
+|'for_each' '(' <varName> ',' <array_expression> ')' '{' <blocks> '}' ';'
 
-
-def int faktor(int argument)
-
-faktor(argument)
-
-
-
-
-<loop> ::= 'for' '(' <assignment> ';' <condition> ';' <atrim-expression> ')' '{' <blocks> '}' ';'
-
-for (int i; i < len(dm); i = 3)				
-
-
-<varNames> ::= <varName>,<varNames>
-| <varName>
-
-
-<array> ::= '[' ']' 
-| '[' <varName> ']'
-| '[' <varName>, <varNames> ']'
-
-| 'for_each' '(' <iterable> ')' '{' <blocks> '}' ';'
-| 'while' '(' <condition> ')' '{' <blocks> '}' ';'
-
- 
-
-print()
-
-
-
+<while_loop> ::=
+|'while' '(' <bool_expression> ')' '{' <blocks> '}' ';'
 
 <varName> ::= /[A-z]+[A-z0-9]+/
 
+<varName_list> ::= <varName>,<varName_list>
+| <varName>
 
 
-
-<datatype> ::= 'int'
+<datatype> ::= 
+| 'int'
 | 'string'
 | 'bool'
 | 'array'
 | 'char'
 | 'float'
 
-<expression> ::= <artim-expression> | <string-expresison> | <bool-expression>
+<expression> ::= 
+| <artim_expression> 
+| <string_expresison> 
+| <bool_expression>
+| <char_expression>
+| <call_function>
+| <array_expression>
 
+<expression_list> ::=
+| <expression_list> ',' <expression>
+| <expression>
 
-#<artim-expression> ::= <term> '+' <artim-expression> ';'
-#| <term> ';'
-#
-#<term> ::= <factor> '*' <term>
-#| <factor> '/' <term>
-#| <factor> '%' <term>
-#| <factor>
-#
-#<factor> ::= '(' <artim-expression> ')'
-#| <const>
-#
-#<const> ::= <integer>
-#
-#<integer> ::= /[0-9]+/ 
+<array_expression> ::= 
+|'[' ']' 
+| '[' <expression_list> ']'
 
-<string-expression> ::= '"' string '"' ';' 
-| ''' string ''' ';'
+<artim_expression> ::= 
+| <term> '+' <artim_expression> ';'
+| <term> '-' <artim_expression> ';'
+| <term> ';'
 
-<bool-expression> ::= 'false' ';' | 'true' ';' 
-| <comparison> ';' 
+<term> ::= 
+| <factor> '*' <term>
+| <factor> '/' <term>
+| <factor> '%' <term>
+| <factor>
 
-<comparison> ::= integer '==' integer ';' 
-| <integer> '!=' <integer> ';' 
-| <integer> '<=' <integer> ';' 
-| <integer> '>=' <integer> ';' 
-| <integer> '<' <integer> ';' 
-| <integer> '>' <integer> ';' 
+<factor> ::= 
+|'(' <artim_expression> ')'
+| <Float>
+| <Integer>
 
+<string_expression> ::= 
+/\".*\"/
 
+<char_expression> ::= 
+/\'.+\'/
 
+<bool_expression> ::= 
+|'(' <artim_expression> <comparison_operator> <artim_expression> ')'
+|'(' <varName> <comparison_operator> <artim_expression> ')'
+|'(' <artim_expression> <comparison_operator> <varName> ')'
+|'(' <varName> <comparison_operator> <varName> ')'
+|'(' <bool_expression> <comparison_operator> <bool_expression> ')'
+|'(' 'true' ')'
+|'(' 'false' ')'
+|<negation_bool>
 
+<negation_bool> ::=
+|'!' <bool_expression>
 
+<return> ::=
+|'return' <expression>
+|'return' <varName>
+|'return'
 
+<logic_operator> ::=
+|'&&'
+|'||'
+|'!'
 
-<comments> ::= '#' /.+/
-| '//*' /[.\n]+/ '//'
-
+<comparison_operator>
+|'=='
+|'!='
+|'>'
+|'>='
+|'<'
+|'<='

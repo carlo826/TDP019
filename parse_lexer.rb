@@ -30,12 +30,14 @@ class Lingua
             token(/\)/) {|m| m}
             token(/\{/) {|m| m}
             token(/\}/) {|m| m}
+            token(/for_each/) {|m| m}
             token(/for/) {|m| m}
             token(/\]/) {|m| m}
             token(/\[/) {|m| m}
             token(/\d+\.\d+/) {|m| m.to_f}
+            token(/true/) {|m| m}
+            token(/false/) {|m| m}
             token(/return/) {|m| m}
-
             token(/float/) {|m| m}
             token(/int/) {|m| m}
             token(/string/) {|m| m}
@@ -46,7 +48,6 @@ class Lingua
             token(/if/) {|m| m}
             token(/elseif/) {|m| m}
             token(/else/) {|m| m}
-
             token(/@/) { |m| m}
             token(/\d+/){|m| m.to_i }
             token(/\==/) {|m| m} #=/
@@ -88,8 +89,9 @@ class Lingua
             rule :block do
                 match(:output)
                 match(:for_loop)
+                match(:for_each_loop)
                 match(:while_loop)
-                match(:declaration,';')
+                match(:declaration)
                 match(:assignment,';') 
                 match(:else_condition)
                 match(:def_function)
@@ -97,51 +99,23 @@ class Lingua
                 match(:call_function)
                 match(:return,';')
                 # match(:input)
-                # match(:loop)
             end
-
-        
-
-            #################TODO
-            #if(x == 20 || x == 30)
-            #if(x==20|30)
-            # fixa @returnExpr.get_name != "false"        /check
-            #variabler och globala variabler lol", globala variabler är 
-            # Skriva testfall
-            # Fixa felhantering 
-            # for i in array loop.    /check
-            # while loop             /check
-            # Fixa namn på vissa saker (inte prio)
-            # fixa "; syntaxen"
-            # Arrayers
-            # Hashtabeller
-            # Fler datatyper?
-            # Input från terminalen.
-            # Fixa så man kan skriva: print("iteration", 5);
-
 
             rule :def_function do
                 match('def',:datatype, :varName, '(',:parameters,')','{',:blocks,'}',';') {|_,datatype, varName, _, parameters,_,_,blocks,_,_| Def_function_node.new(datatype, varName,parameters,blocks)}
                 match('def',:datatype, :varName, '(', ')','{',:blocks,'}',';') {|_,datatype, varName, _,_,_,blocks,_,_| Def_function_node.new(datatype, varName,nil,blocks)}
-            
+                match('def',:datatype, :varName, '(', ')','{','}',';') {|_,datatype, varName, _,_,_,_,_| Def_function_node.new(datatype, varName,nil,[])}
             end
 
             rule :call_function do
-                match(:varName, '(',:expression_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
-                match(:varName, '(',:varName_list,')',';') {|varName, _, parameters,_,_| Call_function_node.new(varName, parameters)}
-                match(:varName, '(',')',';') {|varName,_,_,_| Call_function_node.new(varName, nil)}
-
-
+                match(:varName, '(',:expression_list,')',) {|varName, _, parameters,_| Call_function_node.new(varName, parameters)}
+                match(:varName, '(',:varName_list,')',) {|varName, _, parameters,_| Call_function_node.new(varName, parameters)}
+                match(:varName, '(',')',) {|varName,_,_| Call_function_node.new(varName, nil)}
             end
 
             rule :expression_list do
                 match(:expression_list,',',:expression){|a,_,b | [a, b].flatten}
                 match(:expression){| a | [a].flatten}
-            end
-
-            rule :varName_list do
-                match(:varName_list,',',:varName){|a,_,b | [a, b].flatten}
-                match(:varName){| a | [a].flatten}
             end
 
             rule :parameters do
@@ -150,26 +124,26 @@ class Lingua
                 match(:declaration) {| a | [a].flatten}
             end
 
-
             rule :for_loop do
                 match('for', '(', :declaration, ';', :bool_expression, ';', :assignment, ')', '{', :blocks, '}', ';'){|_, _, var, _,bool, _, assignment, _, _, blocks,_, _| For_loop_node.new(var, bool, assignment, blocks)}
+            end
+
+            rule :for_each_loop do
+                match('for_each', '(', :varName,',',:varName, ')', '{', :blocks, '}', ';'){|_, _, var,_,array, _,_,blocks,_,_| For_each_loop_node.new(var,array,blocks)}
+                match('for_each', '(', :varName,',',:array_expression, ')', '{', :blocks, '}', ';'){|_, _, var,_,array, _,_,blocks,_,_| For_each_loop_node.new(var,array,blocks)}
             end
 
             rule :while_loop do
                 match('while', '(', :bool_expression, ')', '{', :blocks, '}', ';'){|_, _, bool_expr, _, _, blocks, _,_| While_loop_node.new(bool_expr, blocks) }
             end
 
-
-
             rule :declaration do
-                match(:datatype, :varName, '=', :varName) {|datatype, varName, _, expression| DeclareVar.new(datatype,
+                match(:datatype, :varName, '=', :expression,';') {|datatype, varName, _, expression,_| DeclareVar.new(datatype,
                 varName, expression) }
-                match(:datatype, :varName, '=', :expression) {|datatype, varName, _, expression| DeclareVar.new(datatype,
+                match(:datatype, :varName, '=', :varName,';') {|datatype, varName, _, expression,_| DeclareVar.new(datatype,
                 varName, expression) }
                 match(:datatype, :varName) {|datatype, varName| DeclareVar.new(datatype,
                 varName, nil) }
-
-
                 match('@', :datatype, :varName, '=', :expression) {|_,datatype, varName, _, expression| DeclareVar.new(datatype,
                 varName, expression, true) }
                 match('@', :datatype, :varName, '=', :varName) {|_,datatype, varName, _, expression| DeclareVar.new(datatype,
@@ -182,39 +156,18 @@ class Lingua
                 match(:varName, '=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
                 match(:varName, '+=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
                 match(:varName, '-=', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
-                match(:varName, '++', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
-                match(:varName, '--', :varName) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
-
                 match(:varName, '=', :expression) {|varName, operator, expression | ReaVar.new(varName, operator, expression) }
                 match(:varName, '+=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
                 match(:varName, '-=', :aritm_expression) {|varName, operator, expression | ReaVar.new(varName, operator,expression) }
                 match(:varName, '--') {|varName, operator | ReaVar.new(varName, operator,nil) }
                 match(:varName, '++') {|varName, operator | ReaVar.new(varName, operator,nil) }
-
             end
-
-
 
             rule :output do
                 match('print', '(', :expression, ')', ';') {|_, _, expression, _ | Print_expr.new(expression) }
                 match('print', '(', :varName, ')', ';') {|_, _, varName, _ | Print_expr.new(varName) }
                 match('print', '(',')', ';') {|_, _, _ | Print_expr.new() }
-                #TODO:
-                # print("iteration", 5);
             end
-#hantera bara när vi har ints.
-
-
-
-
-# #match('for', '(', :asgn, ';', :expr, ';', :increment, ')', '{', :stmt_list, '}')
-# end
-
-
-            # rule :for_each_loop do
-            #     match('for', varName, 'in', :list,'{', :block,'}')
-            # end
-
 
             rule :if_condition do
                 match('if', :bool_expression, '{', :blocks, '}', :else_condition, ';') {|_, cond, _, blocks, _, _else,_ | Conditions_Node.new(cond,blocks,_else)}
@@ -222,7 +175,6 @@ class Lingua
                 match('if', :bool_expression, '{', :blocks, '}', ';') {|_, cond, _, blocks, _,_| Conditions_Node.new(cond,blocks)}
             end
  
-
             rule :else_condition do
                 match('elseif', :bool_expression,  '{', :blocks, '}', :else_condition) {|_,  cond,  _, blocks, _, _else | Conditions_Node.new(cond,blocks,_else)}
  
@@ -230,20 +182,6 @@ class Lingua
 
                 match('else', '{', :blocks, '}') {|_, _, blocks, _| Conditions_Node.new(true,blocks)}
             end
-
-
-
-            # rule :if_condition do
-            #     match('if', :bool_expression, '{', :blocks, '}',';') {|_, a, _, b, _,_| If_condition_node.new(a,b)}
-            #     match('if', :bool_expression, '{', :blocks, '}', 'else', '{', :blocks, '}',';') {|_, a,_, b,_, _, _, c, _, _| If_else_condition_node.new(a, b, c)}
-            #     match('if', :bool_expression, '{', :blocks, '}', :if_else_condition, ';') {|_, a,_, b,_, c,_| If_else_condition_node.new(a, b, c)}
-            #     match('if', :bool_expression, '{', :blocks, '}', :if_else_condition, 'else', '{', :blocks, '}',';') {|_, a,_, b,_, _, _, c, _, _| If_else_condition_node.new(a, b, c)}
-            # end
-
-            # rule :if_else_condition do
-            #     match('elseif', :bool_expression, '{', :blocks, '}') {|_, a, _, b, _| If_condition_node.new(a,b)}
-            #     match('elseif', :bool_expression, '{', :blocks, '}', :if_else_condition) {|_, a, _, b,_,c| If_else_condition_node.new(a, b, c)}
-            # end
              
 			rule :datatype do
                 match('float') {|m| m}
@@ -262,10 +200,7 @@ class Lingua
                 match(:string_expression)
                 match(:char_expression)
                 match(:call_function)
-            end
-            rule :varName do
-                match(/[A-z]+[A-z0-9]*/) {|m| Find_Variable.new(m)}
-                #match(/bool|int|!|([A-z]+[A-z0-9]*)/) {|m| Find_Variable.new(m)}
+                match(:array_expression)
             end
 
             rule :char_expression do
@@ -274,6 +209,11 @@ class Lingua
 
             rule :string_expression do
                 match(/\".*\"/) {| m | String_node.new(m)}
+            end
+
+            rule :array_expression do
+                match('[', :expression_list, ']') {| _, a, _| Array_node.new(a) }
+                match('[',']') {| _, _| Array_node.new([]) }
             end
                 
             rule :aritm_expression do 
@@ -308,12 +248,9 @@ class Lingua
                 match('(', :varName, :comparison_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
                 match('(', :aritm_expression, :comparison_operator, :varName,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
                 match('(', :varName, :comparison_operator, :varName,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
-
-                # match('(', :bool_expression, :comparison_operator, :bool_expression,')') {|_, a, b, c, _| Bool_node.new(a, b, c) }
                 match('(', :bool_expression, :logic_operator, :bool_expression,')') {|_, a, b, c, _| Comparison_node.new(a, b, c) }
-                # match('(', :aritm_expression, :logic_operator, :aritm_expression,')') {|_, a, b, c, _| Comparison.new(a, b, c) }
-                match('(', 'true',')') { |_,m,_ | Bool_node.new(true)}
-                match('(', 'false',')') { |_,m,_| Bool_node.new(false)}
+                match('(', 'true',')') { |_,_,_ | Bool_node.new(true)}
+                match('(', 'false',')') { |_,_,_| Bool_node.new(false)}
                 match(:negation_bool)
             end
 
@@ -331,10 +268,6 @@ class Lingua
                 match('&&') {|m| m }
                 match('||') {|m| m }
                 match('!') {|m| m }
-
-            # if ((3 == 3) || (3 == 4)){
-            #     print("hej");
-            # };
             end
             
             rule :comparison_operator do
@@ -346,8 +279,16 @@ class Lingua
                 match('<=') {|m| m }
             end
 
-       
+            rule :varName do
+                match(/[A-z]+[A-z0-9]*/) {|m| Find_Variable.new(m)}
+                #match(/bool|int|!|([A-z]+[A-z0-9]*)/) {|m| Find_Variable.new(m)}
+            end
+
             
+            rule :varName_list do
+                match(:varName_list,',',:varName){|a,_,b | [a, b].flatten}
+                match(:varName){| a | [a].flatten}
+            end
 
         end
     end
@@ -357,10 +298,10 @@ class Lingua
         ["quit","exit","bye",""].include?(str.chomp)
     end
 
-    def openFile()
+    def openFile(file)
         output = ""
-        if (File.exist?('lingua.rb')) then
-            File.open('lingua.rb', 'r') do |line|
+        if (File.exist?(file)) then
+            File.open(file, 'r') do |line|
                 str = line.readlines
                 output = str.join
             end
@@ -408,14 +349,19 @@ class Lingua
     end
 end
 
+if ARGV[0]
+   
+    test = Lingua.new
+    if test.openFile(ARGV[0])    
+         puts "Running file #{ARGV[0]}"
+    else
+        puts "Couldn't open file #{ARGV[0]}"
+    end
 
-test = Lingua.new
-test.openFile
-
-
-# Lingua.new.lingua
-# 
-
+else
+    puts "Running Lingua terminal"
+    Lingua.new.lingua
+end
 
 # Examples of use
 
