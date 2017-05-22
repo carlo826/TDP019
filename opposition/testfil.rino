@@ -1,0 +1,7 @@
+i = "test";
+
+task func()
+{
+	out(i);
+}
+m = func();

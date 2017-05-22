@@ -1,0 +1,49 @@
+#loop_tests
+
+task loop_test1() {
+    for(i = 0; 5; 1) {
+        hejsan = i;
+        for(j = i+1; i*2; 1) {
+           if (j == 3) {
+              out(hejsan);
+           }
+        }
+    }
+}
+
+loop_test1();
+
+task loop_test2(start, upto) {
+    expr_test(5, start);
+    expr_test(45, upto);
+
+    result = 5;
+    for(i = start; upto; 1) {
+        if (i == upto/3) {
+            result = result + i;
+        }
+    }
+    expr_test(20, result);
+
+    counter = 0;
+    for(i = start/5; 10; 2) {
+        counter = counter + 1;
+    }
+    expr_test(5, counter);
+}
+
+loop_test2(15/3, 15*3);
+
+task loop_test3() {
+        #12 +    -1
+    a = 6*2+-2*(3+2)/10;
+    expr_test(11, a);
+
+    counter = 3;
+    while(a > 4) {
+        a = a - counter;
+    }
+    expr_test(2, a);
+}
+
+loop_test3();

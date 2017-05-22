@@ -1,0 +1,68 @@
+#Condition_test
+
+task condition_test1() {
+    result = 1;
+    if (result == 1) {
+        out ("success");
+    }
+    elif(result == 1) {
+        out("wont get here");
+    }
+    elif( 1 != 1) {
+        out("wont get here");
+    }
+    else {
+        out("wont get here");
+    }
+}
+
+condition_test1();
+
+task condition_test2() {
+    result = 1;
+    if (result == 2) {
+        out ("wont get here");
+    }
+    elif(result == 1) {
+        out("success");
+    }
+    else {
+        out("wont get here");
+    }
+}
+
+condition_test2();
+
+task condition_test3() {
+    result = 1;
+    if (result == 2) {
+        out ("wont get here");
+    }
+    else {
+        result = 5;
+        if (result == 1) {
+           out("wont get here");
+        }
+    }
+    expr_test(5, result);
+}
+
+
+condition_test3();
+
+task condition_test4() {
+    result = 1;
+    if (result == 2) {
+        out ("wont get here");
+    }
+    if (result == (100-99)) {
+        result = 123;
+        out ("success");
+    }
+    if (result == 123) {
+        out ("success");
+    }
+    expr_test(123, result);
+}
+
+condition_test4();
